@@ -1,7 +1,5 @@
 from torch import nn
 
-from element import Conv, weight_init_kaiming_uniform
-
 
 
 class PassthroughLayer(nn.Module):
