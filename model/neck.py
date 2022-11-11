@@ -7,7 +7,7 @@ from element import Conv, weight_init_kaiming_uniform
 class PassthroughLayer(nn.Module):
     def __init__(self, stride=2):
         super().__init__()
-        self.stride = 2
+        self.stride = stride
 
     def forward(self, ftrs):
         c4, c5 = ftrs
