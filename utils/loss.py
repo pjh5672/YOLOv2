@@ -89,7 +89,6 @@ class YoloLoss():
                 ious_target_with_anchor = self.calculate_iou_target_with_anchors(target_wh=item[3:5], anchor_wh=self.anchors)
                 best_index = ious_target_with_anchor.max(dim=0).indices
                 keep = ious_target_with_anchor >= self.iou_thres
-
                 tx = (item[1] * self.grid_size) - grid_i
                 ty = (item[2] * self.grid_size) - grid_j
                 tw = torch.log(item[3] / self.anchors[best_index, 0])
@@ -171,5 +170,5 @@ if __name__ == "__main__":
             optimizer.step()
             optimizer.zero_grad()
 
-            acc_loss += loss[0].item()
+            acc_loss += loss[0].item() # obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
         print(acc_loss / len(train_loader))
