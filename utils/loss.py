@@ -20,7 +20,7 @@ class YoloLoss():
         self.num_boxes = 5
         self.iou_thres = 0.5
         self.grid_size = grid_size
-        self.num_attributes = 1 + 4 + 1 + 1 
+        self.num_attributes = 1 + 4 + 1 + 1
         self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
@@ -34,7 +34,7 @@ class YoloLoss():
         self.device = predictions.device
         self.bs = predictions.shape[0]
         targets = self.build_batch_target(labels).to(self.device)
-
+        
         with torch.no_grad():
             iou_pred_with_target = self.calculate_iou(pred_box_cxcywh=predictions[..., 1:5], target_box_cxcywh=targets[..., 1:5])
 
@@ -43,16 +43,16 @@ class YoloLoss():
         pred_box_twth = predictions[..., 3:5]
         pred_cls = predictions[..., 5:].permute(0, 3, 1, 2)
 
-        target_obj = (targets[..., 0] == 1).float()
+        target_obj = targets[..., 0]
         target_noobj = (targets[..., 6] == 0).float()
         target_box_txty = targets[..., 1:3]
         target_box_twth = targets[..., 3:5]
         target_cls = targets[..., 5].long()
 
-        obj_loss = self.obj_loss_func(pred_obj, iou_pred_with_target) * target_obj
+        obj_loss = self.obj_loss_func(pred_obj, target_obj * iou_pred_with_target) * target_obj
         obj_loss = obj_loss.sum() / self.bs
-
-        noobj_loss = self.obj_loss_func(pred_obj, target_noobj * 0) * target_noobj
+        
+        noobj_loss = self.obj_loss_func(pred_obj, pred_obj * 0) * target_noobj
         noobj_loss = noobj_loss.sum() / self.bs
 
         txty_loss = self.box_loss_func(pred_box_txty, target_box_txty).sum(dim=-1) * target_obj
@@ -60,7 +60,7 @@ class YoloLoss():
 
         twth_loss = self.box_loss_func(pred_box_twth, target_box_twth).sum(dim=-1) * target_obj
         twth_loss = twth_loss.sum() / self.bs
-
+        
         cls_loss = self.cls_loss_func(pred_cls, target_cls) * target_obj
         cls_loss = cls_loss.sum() / self.bs
 
@@ -94,7 +94,7 @@ class YoloLoss():
                 ty = (item[2] * self.grid_size) - grid_j
                 tw = torch.log(item[3] / self.anchors[best_index, 0])
                 th = torch.log(item[4] / self.anchors[best_index, 1])
-                
+
                 target[grid_j, grid_i, best_index, 0] = 1.0
                 target[grid_j, grid_i, best_index, 1:5] = torch.tensor([tx, ty, tw, th])
                 target[grid_j, grid_i, best_index, 5] = cls_id
@@ -115,9 +115,11 @@ class YoloLoss():
         y1 = torch.max(pred_box_x1y1x2y2[..., 1], target_box_x1y1x2y2[..., 1])
         x2 = torch.min(pred_box_x1y1x2y2[..., 2], target_box_x1y1x2y2[..., 2])
         y2 = torch.min(pred_box_x1y1x2y2[..., 3], target_box_x1y1x2y2[..., 3])
-        
+
         inter = (x2 - x1).clamp(min=0) * (y2 - y1).clamp(min=0)
-        union = abs(pred_box_cxcywh[..., 2] * pred_box_cxcywh[..., 3]) + abs(target_box_cxcywh[..., 2] * target_box_cxcywh[..., 3]) - inter
+        pred_area = (pred_box_x1y1x2y2[..., 2] - pred_box_x1y1x2y2[..., 0]) * (pred_box_x1y1x2y2[..., 3] - pred_box_x1y1x2y2[..., 1])
+        target_area = (target_box_x1y1x2y2[..., 2] - target_box_x1y1x2y2[..., 0]) * (target_box_x1y1x2y2[..., 3] - target_box_x1y1x2y2[..., 1])
+        union = abs(pred_area) + abs(target_area) - inter
         inter[inter.gt(0)] = inter[inter.gt(0)] / union[inter.gt(0)]
         return inter
 
@@ -125,8 +127,8 @@ class YoloLoss():
     def transform_cxcywh_to_x1y1x2y2(self, boxes):
         xc = (boxes[..., 0] + self.grid_x.to(self.device)) / self.grid_size
         yc = (boxes[..., 1] + self.grid_y.to(self.device)) / self.grid_size
-        w = torch.exp(boxes[..., 2]) * self.anchors[:, 0].to(self.device)
-        h = torch.exp(boxes[..., 3]) * self.anchors[:, 1].to(self.device)
+        w = (torch.exp(boxes[..., 2]) * self.anchors[:, 0].to(self.device))
+        h = (torch.exp(boxes[..., 3]) * self.anchors[:, 1].to(self.device))
         x1 = xc - w / 2
         y1 = yc - h / 2
         x2 = xc + w / 2
@@ -159,7 +161,7 @@ if __name__ == "__main__":
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     optimizer.zero_grad()
 
-    for epoch in range(50):
+    for epoch in range(30):
         acc_loss = 0.0
         model.train()
         optimizer.zero_grad()
@@ -168,9 +170,11 @@ if __name__ == "__main__":
             filenames, images, labels, ori_img_sizes = minibatch
             predictions = model(images.to(device))
             loss = criterion(predictions=predictions, labels=labels)
+            # loss.backward()
             loss[0].backward()
             optimizer.step()
             optimizer.zero_grad()
 
-            acc_loss += loss[0].item() # obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
+            acc_loss += loss[0].item()
+            # acc_loss += loss[1].item() # multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
         print(acc_loss / len(train_loader))
