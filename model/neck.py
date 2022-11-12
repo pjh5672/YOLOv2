@@ -1,11 +1,12 @@
+import torch
 from torch import nn
-
 
 
 class PassthroughLayer(nn.Module):
     def __init__(self, stride=2):
         super().__init__()
         self.stride = stride
+
 
     def forward(self, ftrs):
         c4, c5 = ftrs
@@ -20,7 +21,6 @@ class PassthroughLayer(nn.Module):
 
 
 if __name__ == "__main__":
-    import torch
     from backbone import build_backbone
 
     input_size = 416

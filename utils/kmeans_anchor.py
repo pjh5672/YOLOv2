@@ -78,6 +78,7 @@ def kmeans_iou(boxes_wh, n_cluster):
 def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name", type=str, required=True, help="Name to log training")
+    parser.add_argument("--apply_img", type=str, nargs='?', const=True ,help="Clustering box dimensions with original image size")
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
     parser.add_argument("--n_cluster", type=int, default=5, help="Number of clusters")
     args = parser.parse_args()
@@ -95,7 +96,7 @@ def main():
     logger.info(f"[Arguments]\n{pprint.pformat(vars(args))}\n")
 
     dataset = Dataset(yaml_path=args.data, phase='train')
-    boxes_wh = collect_all_boxes_wh(dataset=dataset, apply_image=True)
+    boxes_wh = collect_all_boxes_wh(dataset=dataset, apply_image=args.apply_img)
     clusters, boxes_info = kmeans_iou(boxes_wh=boxes_wh, n_cluster=5)
     ratios = [round(item, 2) for item in (clusters[:, 0] / clusters[:, 1])]
 

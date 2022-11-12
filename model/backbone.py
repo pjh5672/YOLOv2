@@ -53,7 +53,7 @@ class Darknet19(nn.Module):
 
 
 def build_backbone(pretrained=True):
-    feat_dims = (256, 512, 1024)
+    feat_dims = (512, 1024)
     model = Darknet19()
     
     if pretrained:

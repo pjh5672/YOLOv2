@@ -10,6 +10,13 @@ VAL:
 
 MAP_FILE_NAME: voc_val.json
 
+ANCHORS:
+  [[0.276,      0.608     ],
+  [0.068,      0.11711711],
+  [0.16,       0.26666668],
+  [0.492,      0.40533334],
+  [0.774,      0.82      ]]
+
 CLASS_INFO: {
   0: 'aeroplane',
   1: 'bicycle',
@@ -32,3 +39,4 @@ CLASS_INFO: {
   18: 'train',
   19: 'tvmonitor'
 }
+
