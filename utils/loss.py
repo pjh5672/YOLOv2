@@ -167,14 +167,9 @@ if __name__ == "__main__":
             filenames, images, labels, ori_img_sizes = minibatch
             predictions = model(images.to(device))
             loss = criterion(predictions=predictions, labels=labels)
-
             loss[0].backward()
             optimizer.step()
             optimizer.zero_grad()
 
             acc_loss += loss[0].item()
-            # if index % 50 == 0:
-            #     multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss = loss
-            #     print(f"[Epoch:{epoch:02d}] loss:{multipart_loss.item():.4f}, obj:{obj_loss.item():.04f}, noobj:{noobj_loss.item():.04f}, txty:{txty_loss.item():.04f}, twth:{twth_loss.item():.04f}, cls:{cls_loss.item():.04f}")
-
         print(acc_loss / len(train_loader))
