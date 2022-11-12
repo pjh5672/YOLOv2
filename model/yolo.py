@@ -54,7 +54,8 @@ class YoloModel(nn.Module):
             pred_box = self.transform_pred_box(torch.cat((pred_box_txty, pred_box_twth), dim=-1))
             pred_score = pred_obj * torch.softmax(pred_cls, dim=-1)
             pred_score, pred_label = pred_score.max(dim=-1)
-            return torch.cat((pred_score.unsqueeze(-1), pred_box, pred_label.unsqueeze(-1)), dim=-1)
+            pred_out = torch.cat((pred_score.unsqueeze(-1), pred_box, pred_label.unsqueeze(-1)), dim=-1).flatten(1, 2)
+            return pred_out
 
 
     def transform_pred_box(self, pred_box):

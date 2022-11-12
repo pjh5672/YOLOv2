@@ -20,7 +20,7 @@ class YoloLoss():
         self.num_boxes = 5
         self.iou_thres = 0.5
         self.grid_size = grid_size
-        self.num_attributes = 1 + 4 + 1
+        self.num_attributes = 1 + 4 + 1 + 1 
         self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
@@ -43,15 +43,16 @@ class YoloLoss():
         pred_box_twth = predictions[..., 3:5]
         pred_cls = predictions[..., 5:].permute(0, 3, 1, 2)
 
-        target_obj = targets[..., 0]
+        target_obj = (targets[..., 0] == 1).float()
+        target_noobj = (targets[..., 6] == 0).float()
         target_box_txty = targets[..., 1:3]
         target_box_twth = targets[..., 3:5]
         target_cls = targets[..., 5].long()
 
-        obj_loss = self.obj_loss_func(pred_obj, target_obj * iou_pred_with_target) * (target_obj == 1).float()
+        obj_loss = self.obj_loss_func(pred_obj, iou_pred_with_target) * target_obj
         obj_loss = obj_loss.sum() / self.bs
 
-        noobj_loss = self.obj_loss_func(pred_obj, target_obj * 0) * (target_obj == 0).float()
+        noobj_loss = self.obj_loss_func(pred_obj, target_noobj * 0) * target_noobj
         noobj_loss = noobj_loss.sum() / self.bs
 
         txty_loss = self.box_loss_func(pred_box_txty, target_box_txty).sum(dim=-1) * target_obj
@@ -86,17 +87,17 @@ class YoloLoss():
                 grid_i = (item[1] * self.grid_size).long()
                 grid_j = (item[2] * self.grid_size).long()
                 ious_target_with_anchor = self.calculate_iou_target_with_anchors(target_wh=item[3:5], anchor_wh=self.anchors)
+                best_index = ious_target_with_anchor.max(dim=0).indices
                 keep = ious_target_with_anchor >= self.iou_thres
 
-                tw = torch.log(item[3] / self.anchors[keep, 0])
-                th = torch.log(item[4] / self.anchors[keep, 1])
-                tx = ((item[1] * self.grid_size) - grid_i).expand_as(tw)
-                ty = ((item[2] * self.grid_size) - grid_j).expand_as(th)
-                txtytwth = torch.stack((tx, ty, tw, th), dim=-1)
-
-                target[grid_j, grid_i, keep, 0] = 1.0
-                target[grid_j, grid_i, keep, 1:5] = txtytwth
-                target[grid_j, grid_i, keep, 5] = cls_id
+                tx = (item[1] * self.grid_size) - grid_i
+                ty = (item[2] * self.grid_size) - grid_j
+                tw = torch.log(item[3] / self.anchors[best_index, 0])
+                th = torch.log(item[4] / self.anchors[best_index, 1])
+                target[grid_j, grid_i, best_index, 0] = 1.0
+                target[grid_j, grid_i, best_index, 1:5] = torch.tensor([tx, ty, tw, th])
+                target[grid_j, grid_i, best_index, 5] = cls_id
+                target[grid_j, grid_i, keep, 6] = 1.0
             return target
 
     
@@ -157,7 +158,8 @@ if __name__ == "__main__":
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     optimizer.zero_grad()
 
-    for epoch in range(20):
+    for epoch in range(50):
+        acc_loss = 0.0
         model.train()
         optimizer.zero_grad()
 
@@ -169,7 +171,10 @@ if __name__ == "__main__":
             loss[0].backward()
             optimizer.step()
             optimizer.zero_grad()
-        
-            if index % 50 == 0:
-                multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss = loss
-                print(f"[Epoch:{epoch:02d}] loss:{multipart_loss.item():.4f}, obj:{obj_loss.item():.04f}, noobj:{noobj_loss.item():.04f}, txty:{txty_loss.item():.04f}, twth:{twth_loss.item():.04f}, cls:{cls_loss.item():.04f}")
+
+            acc_loss += loss[0].item()
+            # if index % 50 == 0:
+            #     multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss = loss
+            #     print(f"[Epoch:{epoch:02d}] loss:{multipart_loss.item():.4f}, obj:{obj_loss.item():.04f}, noobj:{noobj_loss.item():.04f}, txty:{txty_loss.item():.04f}, twth:{twth_loss.item():.04f}, cls:{cls_loss.item():.04f}")
+
+        print(acc_loss / len(train_loader))

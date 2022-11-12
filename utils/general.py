@@ -58,10 +58,15 @@ def transform_x1y1x2y2_to_xcycwh(boxes):
 
 
 def filter_confidence(prediction, conf_threshold=0.01):
-    keep = (prediction[:, 0] > conf_threshold)
-    conf = prediction[:, 0][keep]
-    box = prediction[:, 1:5][keep]
-    cls_id = prediction[:, 5][keep]
+    try:
+        keep = (prediction[:, 0] > conf_threshold)
+        conf = prediction[:, 0][keep]
+        box = prediction[:, 1:5][keep]
+        cls_id = prediction[:, 5][keep]
+    except:
+        print(keep.shape)
+        print(prediction.shape)
+        raise RuntimeError('gg')
     return np.concatenate([cls_id[:, np.newaxis], box, conf[:, np.newaxis]], axis=-1)
 
 
