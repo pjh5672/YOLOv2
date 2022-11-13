@@ -38,7 +38,6 @@ def train(args, dataloader, model, criterion, optimizer):
     losses = defaultdict(float)
     model.train()
     model.set_grid_xy(input_size=args.train_size)
-    criterion.set_grid_xy(input_size=args.train_size)
     optimizer.zero_grad()
 
     for i, minibatch in enumerate(dataloader):
@@ -56,9 +55,8 @@ def train(args, dataloader, model, criterion, optimizer):
                 model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
 
-            if args.multi_scale and ni > args.nw:
+            if args.multi_scale:
                 images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
-
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
         loss[0].backward()

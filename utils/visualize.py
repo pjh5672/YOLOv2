@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from general import transform_xcycwh_to_x1y1x2y2, scale_to_original
 
+
 matplotlib.use('Agg')
 plt.rcParams.update({'figure.max_open_warning': 0})
 TEXT_COLOR = (255, 255, 255)

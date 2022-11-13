@@ -8,14 +8,14 @@ from element import Conv, weight_init_kaiming_uniform
 class YoloHead(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        ftr_dims = 1024
-        self.route = Conv(in_channels, ftr_dims, kernel_size=3, padding=1)
-        self.detect = nn.Conv2d(ftr_dims, out_channels, kernel_size=1)
+        feat_dims = 1024
+        self.conv = Conv(in_channels, feat_dims, kernel_size=3, padding=1)
+        self.detect = nn.Conv2d(feat_dims, out_channels, kernel_size=1)
         self.apply(weight_init_kaiming_uniform)
 
 
     def forward(self, x):
-        out = self.route(x)
+        out = self.conv(x)
         out = self.detect(out)
         return out
 
@@ -32,8 +32,8 @@ if __name__ == "__main__":
     num_attributes = (1 + 4 + num_classes)
     device = torch.device('cpu')
     backbone, feat_dims = build_backbone(arch_name='darknet19', pretrained=True)
-    neck = PassthroughLayer(in_channels=feat_dims, stride=2)
-    head = YoloHead(in_channels=neck.ftr_dims, out_channels=num_attributes*num_boxes)
+    neck = PassthroughLayer(stride=2)
+    head = YoloHead(in_channels=feat_dims[0] * 4 + feat_dims[1], out_channels=num_attributes * num_boxes)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
     out = backbone(x)

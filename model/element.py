@@ -9,6 +9,18 @@ def weight_init_kaiming_uniform(module):
         module.bias.data.fill_(0.0)
 
 
+class DepthwiseSeparableConv(nn.Module):
+    def __init__(self, c1, c2, kernel_size=3):
+        super().__init__()
+        self.conv = nn.Sequential(
+            Conv(c1, c1, kernel_size=kernel_size, padding=1, groups=c1),
+            Conv(c1, c2, kernel_size=1),
+        )
+
+    def forward(self, x):
+        return self.conv(x)
+
+
 class Conv(nn.Module):
     def __init__(self, c1, c2, kernel_size, stride=1, padding=0, dilation=1, groups=1, act=True):
         super().__init__()

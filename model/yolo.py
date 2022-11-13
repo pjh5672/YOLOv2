@@ -24,8 +24,8 @@ class YoloModel(nn.Module):
         self.num_classes = num_classes
         self.num_attributes = 1 + 4 + num_classes
         self.backbone, feat_dims = build_backbone(arch_name=backbone, pretrained=True)
-        self.neck = PassthroughLayer(in_channels=feat_dims, stride=2)
-        self.head = YoloHead(in_channels=self.neck.ftr_dims, out_channels=self.num_attributes * self.num_boxes)
+        self.neck = PassthroughLayer(stride=2)
+        self.head = YoloHead(in_channels=feat_dims[0]*4+feat_dims[1], out_channels=self.num_attributes*self.num_boxes)
         self.anchors = torch.tensor(anchors)
         self.set_grid_xy(input_size=input_size)
 
@@ -86,7 +86,6 @@ if __name__ == "__main__":
     model = YoloModel(input_size=input_size, backbone='darknet19', num_classes=num_classes, anchors=anchors).to(device)
     model.train()
     out = model(inp.to(device))
-    # print(model.grid_x)
     print(model.grid_size)
     print(out.shape)
 
@@ -98,7 +97,6 @@ if __name__ == "__main__":
     inp = torch.randn(2, 3, 608, 608)
     model.set_grid_xy(input_size=608)
     out = model(inp.to(device))
-    # print(model.grid_x)
     print(model.grid_size)
     print(out.shape)
 
