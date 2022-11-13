@@ -43,7 +43,6 @@ def train(args, dataloader, model, criterion, optimizer):
 
     for i, minibatch in enumerate(dataloader):
         ni = i + len(dataloader) * (epoch - 1)
-        print(epoch, ni, args.train_size)
         if ni <= args.nw:
             xi = [0, args.nw]
             args.accumulate = max(1, np.interp(ni, xi, [1, args.nbs / args.bs]).round())
@@ -51,14 +50,15 @@ def train(args, dataloader, model, criterion, optimizer):
 
         images, labels = minibatch[1], minibatch[2]
 
-        if args.multi_scale and ni % 10 == 0:
-            args.train_size = random.randint(10, 19) * 32
-            model.set_grid_xy(input_size=args.train_size)
-            criterion.set_grid_xy(input_size=args.train_size)
+        if ni > args.nw:
+            if args.multi_scale and ni % 10 == 0:
+                args.train_size = random.randint(10, 19) * 32
+                model.set_grid_xy(input_size=args.train_size)
+                criterion.set_grid_xy(input_size=args.train_size)
 
-        if args.multi_scale:
-            images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
-            
+            if args.multi_scale and ni > args.nw:
+                images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
+
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
         loss[0].backward()
