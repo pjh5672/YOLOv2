@@ -57,6 +57,7 @@ def train(args, dataloader, model, criterion, optimizer):
 
             if args.multi_scale:
                 images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
+
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
         loss[0].backward()
