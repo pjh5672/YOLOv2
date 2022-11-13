@@ -11,17 +11,8 @@ class PassthroughLayer(nn.Module):
         P4_dims = 512 * 4
         P5_dims = 1024
         self.ftr_dims = P4_dims + P5_dims
-        
-        self.conv1 = nn.Sequential(
-            Conv(in_channels[0]*4, P4_dims, 1, padding=0),
-            Conv(P4_dims, P4_dims*2, 3, padding=1),
-            Conv(P4_dims*2, P4_dims, 1, padding=0)
-        )
-        self.conv2 = nn.Sequential(
-            Conv(in_channels[1], P5_dims, 1, padding=0),
-            Conv(P5_dims, P5_dims*2, 3, padding=1),
-            Conv(P5_dims*2, P5_dims, 1, padding=0)
-        )
+        self.conv1 = Conv(in_channels[0]*4, P4_dims, 1)
+        self.conv2 = Conv(in_channels[1], P5_dims, 1)
         self.apply(weight_init_kaiming_uniform)
 
 
@@ -44,7 +35,7 @@ if __name__ == "__main__":
 
     input_size = 416
     device = torch.device('cpu')
-    backbone, feat_dims = build_backbone(arch_name='darknet18', pretrained=True)
+    backbone, feat_dims = build_backbone(arch_name='darknet19', pretrained=True)
     neck = PassthroughLayer(in_channels=feat_dims, stride=2)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
