@@ -7,16 +7,12 @@ from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))
+ROOT = Path(__file__).resolve().parents[0]
+SEED = 2023
+np.random.seed(SEED)
 
 from dataloader import Dataset
 from utils import build_basic_logger, visualize_box_hist
-
-SEED = 2023
-np.random.seed(SEED)
 
 
 
