@@ -14,20 +14,17 @@ from utils import set_grid
 
 
 class YoloLoss():
-    def __init__(self, grid_size, anchors):
+    def __init__(self, input_size, anchors):
         self.lambda_noobj = 0.5
         self.lambda_coord = 5.0
         self.num_boxes = 5
         self.iou_thres = 0.5
-        self.grid_size = grid_size
         self.num_attributes = 1 + 4 + 1 + 1
         self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
-        grid_x, grid_y = set_grid(grid_size=self.grid_size)
-        self.grid_x = grid_x.contiguous().view((1, -1, 1))
-        self.grid_y = grid_y.contiguous().view((1, -1, 1))
         self.anchors = anchors
+        self.set_grid_xy(input_size=input_size)
 
 
     def __call__(self, predictions, labels):
@@ -66,6 +63,14 @@ class YoloLoss():
 
         multipart_loss = obj_loss + self.lambda_noobj * noobj_loss + self.lambda_coord * (txty_loss + twth_loss) + cls_loss
         return multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
+
+
+    def set_grid_xy(self, input_size):
+        stride = 32
+        self.grid_size = input_size // stride
+        grid_x, grid_y = set_grid(grid_size=self.grid_size)
+        self.grid_x = grid_x.contiguous().view((1, -1, 1))
+        self.grid_y = grid_y.contiguous().view((1, -1, 1))
 
 
     def calculate_iou_target_with_anchors(self, target_wh, anchor_wh):
@@ -146,7 +151,7 @@ if __name__ == "__main__":
 
     yaml_path = ROOT / 'data' / 'toy.yaml'
     input_size = 416
-    batch_size = 4
+    batch_size = 2
     device = torch.device('cuda')
 
     transformer = BasicTransform(input_size=input_size)
@@ -155,9 +160,9 @@ if __name__ == "__main__":
     train_loader = DataLoader(dataset=train_dataset, collate_fn=Dataset.collate_fn, batch_size=batch_size, shuffle=False, pin_memory=True)
     anchors = train_dataset.anchors
     num_classes = len(train_dataset.class_list)
-
-    model = YoloModel(input_size=input_size, num_classes=num_classes, anchors=anchors).to(device)
-    criterion = YoloLoss(grid_size=model.grid_size, anchors=model.anchors)
+    
+    model = YoloModel(input_size=input_size, backbone="darknet19", num_classes=num_classes, anchors=anchors).to(device)
+    criterion = YoloLoss(input_size=input_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     optimizer.zero_grad()
 

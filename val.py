@@ -14,7 +14,8 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parents[0]
 TIMESTAMP = datetime.today().strftime('%Y-%m-%d_%H-%M')
 OS_SYSTEM = platform.system()
-seed_num = 2023
+SEED = 2023
+torch.manual_seed(SEED)
 
 from dataloader import Dataset, BasicTransform, to_image
 from model import YoloModel
@@ -27,9 +28,10 @@ from utils import Evaluator, build_basic_logger, generate_random_color, transfor
 @torch.no_grad()
 def validate(args, dataloader, model, evaluator, epoch=0, save_result=False):
     model.eval()
+    model.set_grid_xy(input_size=args.img_size)
+
     with open(args.mAP_file_path, mode="r") as f:
         mAP_json = json.load(f)
-
     cocoPred = []
     check_images, check_preds, check_results = [], [], []
     imageToid = mAP_json["imageToid"]
@@ -96,6 +98,7 @@ def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name", type=str, required=True, help="Name to log training")
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
+    parser.add_argument("--backbone", type=str, default="darknet19", help="Model architecture")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--bs", type=int, default=32, help="Batch size")
     parser.add_argument("--num_epochs", type=int, default=1, help="Number of training epochs")
@@ -117,7 +120,6 @@ def parse_args(make_dirs=True):
 
 
 def main():
-    torch.manual_seed(seed_num)
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / 'val.log', set_level=1)
     logger.info(f"[Arguments]\n{pprint.pformat(vars(args))}\n")
@@ -128,12 +130,14 @@ def main():
     val_loader = DataLoader(dataset=val_dataset, collate_fn=Dataset.collate_fn, batch_size=args.bs, shuffle=False, pin_memory=True,  num_workers=args.workers)
 
     ckpt = torch.load(args.ckpt_path, map_location = {"cpu":"cuda:%d" %args.rank})
+    args.anchors = ckpt["anchors"]
     args.class_list = ckpt["class_list"]
     args.color_list = generate_random_color(len(args.class_list))
     args.mAP_file_path = val_dataset.mAP_file_path
 
-    model = YoloModel(input_size=args.img_size, backbone=args.backbone, num_classes=len(args.class_list)).cuda(args.rank)
+    model = YoloModel(input_size=args.img_size, backbone=args.backbone, num_classes=len(args.class_list), anchors=args.anchors)
     model.load_state_dict(ckpt["model_state"], strict=True)
+    model = model.cuda(args.rank)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
 
     if (args.exp_path / 'predictions.txt').is_file():

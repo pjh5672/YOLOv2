@@ -1,22 +1,41 @@
 import torch
 from torch import nn
 
+from element import Conv, weight_init_kaiming_uniform
+
 
 class PassthroughLayer(nn.Module):
-    def __init__(self, stride=2):
+    def __init__(self, in_channels, stride=2):
         super().__init__()
         self.stride = stride
+        P4_dims = 512 * 4
+        P5_dims = 1024
+        self.ftr_dims = P4_dims + P5_dims
+        
+        self.conv1 = nn.Sequential(
+            Conv(in_channels[0]*4, P4_dims, 1, padding=0),
+            Conv(P4_dims, P4_dims*2, 3, padding=1),
+            Conv(P4_dims*2, P4_dims, 1, padding=0)
+        )
+        self.conv2 = nn.Sequential(
+            Conv(in_channels[1], P5_dims, 1, padding=0),
+            Conv(P5_dims, P5_dims*2, 3, padding=1),
+            Conv(P5_dims*2, P5_dims, 1, padding=0)
+        )
+        self.apply(weight_init_kaiming_uniform)
 
 
     def forward(self, ftrs):
-        c4, c5 = ftrs
-        h, w = c4.shape[-2:]
+        C4, C5 = ftrs
+        h, w = C4.shape[-2:]
         h_div, w_div = h // self.stride, w // self.stride
-        c4_11 = c4[..., :h_div, :w_div]
-        c4_12 = c4[..., :h_div, w_div:]
-        c4_21 = c4[..., h_div:, :w_div]
-        c4_22 = c4[..., h_div:, w_div:]
-        return torch.cat((c5, c4_11, c4_12, c4_21, c4_22), dim=1)
+        C4_11 = C4[..., :h_div, :w_div]
+        C4_12 = C4[..., :h_div, w_div:]
+        C4_21 = C4[..., h_div:, :w_div]
+        C4_22 = C4[..., h_div:, w_div:]
+        P4 = self.conv1(torch.cat((C4_11, C4_12, C4_21, C4_22), dim=1))
+        P5 = self.conv2(C5)
+        return torch.cat((P4, P5), dim=1)
 
 
 
@@ -25,8 +44,8 @@ if __name__ == "__main__":
 
     input_size = 416
     device = torch.device('cpu')
-    backbone, feat_dims = build_backbone(pretrained=True)
-    neck = PassthroughLayer(stride=2)
+    backbone, feat_dims = build_backbone(arch_name='darknet18', pretrained=True)
+    neck = PassthroughLayer(in_channels=feat_dims, stride=2)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
     ftrs = backbone(x)

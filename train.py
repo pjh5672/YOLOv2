@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 import pprint
 import platform
 import argparse
@@ -21,7 +22,9 @@ ROOT = Path(__file__).resolve().parents[0]
 OS_SYSTEM = platform.system()
 TIMESTAMP = datetime.today().strftime('%Y-%m-%d_%H-%M')
 cudnn.benchmark = True
-seed_num = 2023
+SEED = 2023
+random.seed(SEED)
+torch.manual_seed(SEED)
 
 from dataloader import Dataset, BasicTransform, AugmentTransform
 from model import YoloModel
@@ -34,16 +37,28 @@ def train(args, dataloader, model, criterion, optimizer):
     loss_type = ['multipart', 'obj', 'noobj', 'txty', 'twth', 'cls']
     losses = defaultdict(float)
     model.train()
+    model.set_grid_xy(input_size=args.train_size)
+    criterion.set_grid_xy(input_size=args.train_size)
     optimizer.zero_grad()
 
     for i, minibatch in enumerate(dataloader):
-        ni = i + len(dataloader) * epoch
+        ni = i + len(dataloader) * (epoch - 1)
+        print(epoch, ni, args.train_size)
         if ni <= args.nw:
             xi = [0, args.nw]
             args.accumulate = max(1, np.interp(ni, xi, [1, args.nbs / args.bs]).round())
             set_lr(optimizer, np.interp(ni, xi, [args.init_lr, args.base_lr]))
 
         images, labels = minibatch[1], minibatch[2]
+
+        if args.multi_scale and ni % 10 == 0:
+            args.train_size = random.randint(10, 19) * 32
+            model.set_grid_xy(input_size=args.train_size)
+            criterion.set_grid_xy(input_size=args.train_size)
+
+        if args.multi_scale:
+            images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
+            
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
         loss[0].backward()
@@ -72,7 +87,9 @@ def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name", type=str, required=True, help="Name to log training")
     parser.add_argument("--resume", type=str, nargs='?', const=True ,help="Name to resume path")
+    parser.add_argument('--multi_scale', action='store_true', help='Multi-scale training')
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
+    parser.add_argument("--backbone", type=str, default="darknet19", help="Model architecture")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--bs", type=int, default=64, help="Batch size")
     parser.add_argument("--nbs", type=int, default=64, help="Nominal batch size")
@@ -104,7 +121,6 @@ def parse_args(make_dirs=True):
 def main():
     global epoch, logger
     
-    torch.manual_seed(seed_num)
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / 'train.log', set_level=1)
 
@@ -122,13 +138,14 @@ def main():
     args.color_list = generate_random_color(len(args.class_list))
     args.nw = max(round(args.warmup * len(train_loader)), 100)
     args.accumulate = max(round(args.nbs / args.bs), 1)
-    args.last_opt_step = -1
     args.mAP_file_path = val_dataset.mAP_file_path
+    args.train_size = args.img_size
+    args.last_opt_step = -1
 
-    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
+    model = YoloModel(input_size=args.img_size, backbone=args.backbone, num_classes=len(args.class_list), anchors=args.anchors)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model = model.cuda(args.rank)
-    criterion = YoloLoss(grid_size=model.grid_size, anchors=model.anchors)
+    criterion = YoloLoss(input_size=args.img_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_decay, gamma=0.1)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
@@ -159,6 +176,7 @@ def main():
         logger.info(train_loss_str)
 
         save_opt = {"running_epoch": epoch,
+                    "anchors": args.anchors,
                     "class_list": args.class_list,
                     "model_state": model.state_dict(),
                     "optimizer_state": optimizer.state_dict(),
