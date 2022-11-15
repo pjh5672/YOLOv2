@@ -8,9 +8,8 @@ from element import Conv, weight_init_kaiming_uniform
 class YoloHead(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        feat_dims = 1024
-        self.conv = Conv(in_channels, feat_dims, kernel_size=3, padding=1)
-        self.detect = nn.Conv2d(feat_dims, out_channels, kernel_size=1)
+        self.conv = Conv(in_channels, 1024, kernel_size=3, padding=1)
+        self.detect = nn.Conv2d(1024, out_channels, kernel_size=1)
         self.apply(weight_init_kaiming_uniform)
 
 
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     num_boxes = 5
     num_attributes = (1 + 4 + num_classes)
     device = torch.device('cpu')
-    backbone, feat_dims = build_backbone(arch_name='darknet19', pretrained=True)
+    backbone, feat_dims = build_backbone(pretrained=True)
     neck = PassthroughLayer(stride=2)
     head = YoloHead(in_channels=feat_dims[0] * 4 + feat_dims[1], out_channels=num_attributes * num_boxes)
 

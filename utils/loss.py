@@ -18,8 +18,8 @@ class YoloLoss():
         self.lambda_noobj = 0.5
         self.lambda_coord = 5.0
         self.num_boxes = 5
-        self.iou_thres = 0.5
-        self.num_attributes = 1 + 4 + 1 + 1
+        self.iou_threshold = 0.5
+        self.num_attributes = 1 + 4 + 1
         self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
@@ -31,7 +31,7 @@ class YoloLoss():
         self.device = predictions.device
         self.bs = predictions.shape[0]
         targets = self.build_batch_target(labels).to(self.device)
-        
+    
         with torch.no_grad():
             iou_pred_with_target = self.calculate_iou(pred_box_cxcywh=predictions[..., 1:5], target_box_cxcywh=targets[..., 1:5])
 
@@ -40,13 +40,13 @@ class YoloLoss():
         pred_box_twth = predictions[..., 3:5]
         pred_cls = predictions[..., 5:].permute(0, 3, 1, 2)
 
-        target_obj = targets[..., 0]
-        target_noobj = (targets[..., 6] == 0).float()
+        target_obj = (targets[..., 0] == 1).float()
+        target_noobj = (targets[..., 0] == 0).float()
         target_box_txty = targets[..., 1:3]
         target_box_twth = targets[..., 3:5]
         target_cls = targets[..., 5].long()
 
-        obj_loss = self.obj_loss_func(pred_obj, target_obj * iou_pred_with_target) * target_obj
+        obj_loss = self.obj_loss_func(pred_obj, iou_pred_with_target) * target_obj
         obj_loss = obj_loss.sum() / self.bs
         
         noobj_loss = self.obj_loss_func(pred_obj, pred_obj * 0) * target_noobj
@@ -93,17 +93,21 @@ class YoloLoss():
                 grid_j = (item[2] * self.grid_size).long()
                 ious_target_with_anchor = self.calculate_iou_target_with_anchors(target_wh=item[3:5], anchor_wh=self.anchors)
                 best_index = ious_target_with_anchor.max(dim=0).indices
-                keep = ious_target_with_anchor >= self.iou_thres
 
                 tx = (item[1] * self.grid_size) - grid_i
                 ty = (item[2] * self.grid_size) - grid_j
                 tw = torch.log(item[3] / self.anchors[best_index, 0])
                 th = torch.log(item[4] / self.anchors[best_index, 1])
 
-                target[grid_j, grid_i, best_index, 0] = 1.0
                 target[grid_j, grid_i, best_index, 1:5] = torch.tensor([tx, ty, tw, th])
                 target[grid_j, grid_i, best_index, 5] = cls_id
-                target[grid_j, grid_i, keep, 6] = 1.0
+                
+                for index, iou in enumerate(ious_target_with_anchor):
+                    if index == best_index:
+                        target[grid_j, grid_i, index, 0] = 1.0
+                    else:
+                        if iou >= self.iou_threshold:
+                            target[grid_j, grid_i, index, 0] = -1.0
             return target
 
     
@@ -161,7 +165,7 @@ if __name__ == "__main__":
     anchors = train_dataset.anchors
     num_classes = len(train_dataset.class_list)
     
-    model = YoloModel(input_size=input_size, backbone="darknet19", num_classes=num_classes, anchors=anchors).to(device)
+    model = YoloModel(input_size=input_size, num_classes=num_classes, anchors=anchors).to(device)
     criterion = YoloLoss(input_size=input_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     optimizer.zero_grad()
@@ -175,11 +179,9 @@ if __name__ == "__main__":
             filenames, images, labels, ori_img_sizes = minibatch
             predictions = model(images.to(device))
             loss = criterion(predictions=predictions, labels=labels)
-            # loss.backward()
             loss[0].backward()
             optimizer.step()
             optimizer.zero_grad()
 
-            acc_loss += loss[0].item()
-            # acc_loss += loss[1].item() # multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
+            acc_loss += loss[0].item() # multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
         print(acc_loss / len(train_loader))

@@ -86,7 +86,6 @@ def parse_args(make_dirs=True):
     parser.add_argument("--resume", type=str, nargs='?', const=True ,help="Name to resume path")
     parser.add_argument('--multi_scale', action='store_true', help='Multi-scale training')
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
-    parser.add_argument("--backbone", type=str, default="darknet19", help="Model architecture")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--bs", type=int, default=64, help="Batch size")
     parser.add_argument("--nbs", type=int, default=64, help="Nominal batch size")
@@ -138,7 +137,7 @@ def main():
     args.train_size = args.img_size
     args.last_opt_step = -1
 
-    model = YoloModel(input_size=args.img_size, backbone=args.backbone, num_classes=len(args.class_list), anchors=args.anchors)
+    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model = model.cuda(args.rank)
     criterion = YoloLoss(input_size=args.img_size, anchors=model.anchors)

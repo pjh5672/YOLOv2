@@ -1,8 +1,7 @@
 import sys
 from pathlib import Path
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
@@ -17,13 +16,13 @@ from utils import set_grid
 
 
 class YoloModel(nn.Module):
-    def __init__(self, input_size, backbone, num_classes, anchors):
+    def __init__(self, input_size, num_classes, anchors):
         super().__init__()
         self.num_boxes = 5
         self.input_size = input_size
         self.num_classes = num_classes
         self.num_attributes = 1 + 4 + num_classes
-        self.backbone, feat_dims = build_backbone(arch_name=backbone, pretrained=True)
+        self.backbone, feat_dims = build_backbone(pretrained=True)
         self.neck = PassthroughLayer(stride=2)
         self.head = YoloHead(in_channels=feat_dims[0]*4+feat_dims[1], out_channels=self.num_attributes*self.num_boxes)
         self.anchors = torch.tensor(anchors)
@@ -83,7 +82,7 @@ if __name__ == "__main__":
                [0.8605263,  0.8736842 ],
                [0.283375,   0.5775    ]]
 
-    model = YoloModel(input_size=input_size, backbone='darknet19', num_classes=num_classes, anchors=anchors).to(device)
+    model = YoloModel(input_size=input_size, num_classes=num_classes, anchors=anchors).to(device)
     model.train()
     out = model(inp.to(device))
     print(model.grid_size)
