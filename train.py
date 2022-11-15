@@ -87,7 +87,7 @@ def parse_args(make_dirs=True):
     parser.add_argument('--multi_scale', action='store_true', help='Multi-scale training')
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
-    parser.add_argument("--bs", type=int, default=64, help="Batch size")
+    parser.add_argument("--bs", type=int, default=32, help="Batch size")
     parser.add_argument("--nbs", type=int, default=64, help="Nominal batch size")
     parser.add_argument("--num_epochs", type=int, default=180, help="Number of training epochs")
     parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
