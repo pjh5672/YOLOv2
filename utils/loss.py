@@ -18,9 +18,9 @@ class YoloLoss():
         self.lambda_noobj = 0.5
         self.lambda_coord = 5.0
         self.num_boxes = 5
-        self.iou_threshold = 0.5
+        self.iou_threshold = 0.25
         self.num_attributes = 1 + 4 + 1
-        self.obj_loss_func = nn.MSELoss(reduction='none')
+        self.obj_loss_func = nn.BCEWithLogitsLoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
         self.anchors = anchors

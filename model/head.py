@@ -32,7 +32,7 @@ if __name__ == "__main__":
     device = torch.device('cpu')
     backbone, feat_dims = build_backbone(pretrained=True)
     neck = PassthroughLayer(stride=2)
-    head = YoloHead(in_channels=feat_dims[0] * 4 + feat_dims[1], out_channels=num_attributes * num_boxes)
+    head = YoloHead(in_channels=64 * 4 + 1024, out_channels=num_attributes * num_boxes)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
     out = backbone(x)

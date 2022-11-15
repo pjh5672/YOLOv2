@@ -24,7 +24,7 @@ class YoloModel(nn.Module):
         self.num_attributes = 1 + 4 + num_classes
         self.backbone, feat_dims = build_backbone(pretrained=True)
         self.neck = PassthroughLayer(stride=2)
-        self.head = YoloHead(in_channels=feat_dims[0]*4+feat_dims[1], out_channels=self.num_attributes*self.num_boxes)
+        self.head = YoloHead(in_channels=64 * 4 + 1024, out_channels=self.num_attributes*self.num_boxes)
         self.anchors = torch.tensor(anchors)
         self.set_grid_xy(input_size=input_size)
 
@@ -38,7 +38,7 @@ class YoloModel(nn.Module):
         out = self.head(out)
         out = out.permute(0, 2, 3, 1).flatten(1, 2).view((bs, -1, self.num_boxes, self.num_attributes))
 
-        pred_obj = torch.sigmoid(out[..., [0]])
+        pred_obj = out[..., [0]]
         pred_box_txty = torch.sigmoid(out[..., 1:3])
         pred_box_twth = out[..., 3:5]
         pred_cls = out[..., 5:]
@@ -47,7 +47,7 @@ class YoloModel(nn.Module):
             return torch.cat((pred_obj, pred_box_txty, pred_box_twth, pred_cls), dim=-1)
         else:
             pred_box = self.transform_pred_box(torch.cat((pred_box_txty, pred_box_twth), dim=-1))
-            pred_score = pred_obj * torch.softmax(pred_cls, dim=-1)
+            pred_score = torch.sigmoid(pred_obj) * torch.softmax(pred_cls, dim=-1)
             pred_score, pred_label = pred_score.max(dim=-1)
             pred_out = torch.cat((pred_score.unsqueeze(-1), pred_box, pred_label.unsqueeze(-1)), dim=-1)
             return pred_out.flatten(1, 2)
