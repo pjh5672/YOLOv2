@@ -35,7 +35,7 @@ class AugmentTransform:
         self.input_size = input_size
         self.flip = Albumentations(p_flipud=0.0, p_fliplr=0.5)
         self.gain_h = 0.015
-        self.gain_s = 0.5
+        self.gain_s = 0.6
         self.gain_v = 0.3
         self.degrees = 0
         self.translate = 0.1
@@ -45,7 +45,7 @@ class AugmentTransform:
 
     def __call__(self, image, label):
         img_h, img_w = image.shape[:2]
-        crop_size = random.randint(int(min(img_h, img_w) * 0.8), int(min(img_h, img_w) * 1.0))
+        crop_size = random.randint(int(min(img_h, img_w) * 0.5), int(min(img_h, img_w) * 1.0))
         image, label = self.flip(image=image, label=label)
         image = augment_hsv(image, gain_h=self.gain_h, gain_s=self.gain_s, gain_v=self.gain_v)
         label[:, 1:5] = transform_xcycwh_to_x1y1x2y2(label[:, 1:5])

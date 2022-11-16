@@ -15,8 +15,8 @@ from utils import set_grid
 
 class YoloLoss():
     def __init__(self, input_size, anchors):
-        self.lambda_obj = 5.0
         self.num_boxes = 5
+        self.lambda_obj = 5.0
         self.iou_threshold = 0.5
         self.num_attributes = 1 + 4 + 1
         self.obj_loss_func = nn.BCEWithLogitsLoss(reduction='none')
