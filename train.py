@@ -187,7 +187,7 @@ def main():
                 result_analyis(args=args, mAP_dict=mAP_dict["all"])
                 best_epoch, best_score, best_mAP_str = epoch, ap50, eval_text
                 torch.save(save_opt, args.weight_dir / "best.pt")
-    
+
         torch.save(save_opt, args.weight_dir / "last.pt")
         scheduler.step()
 

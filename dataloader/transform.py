@@ -36,10 +36,10 @@ class AugmentTransform:
         self.flip = Albumentations(p_flipud=0.0, p_fliplr=0.5)
         self.gain_h = 0.015
         self.gain_s = 0.5
-        self.gain_v = 0.5
+        self.gain_v = 0.3
         self.degrees = 0
-        self.translate = 0.3
-        self.scale = 0.5
+        self.translate = 0.1
+        self.scale = 0.75
         self.perspective = 0.0001
     
 
@@ -50,7 +50,7 @@ class AugmentTransform:
         image = augment_hsv(image, gain_h=self.gain_h, gain_s=self.gain_s, gain_v=self.gain_v)
         label[:, 1:5] = transform_xcycwh_to_x1y1x2y2(label[:, 1:5])
         label[:, 1:5] = scale_to_original(label[:, 1:5], scale_w=img_w, scale_h=img_h)
-        image, label = random_crop(image, label, crop_size=crop_size, area_thres=0.25)
+        image, label = random_crop(image, label, crop_size=crop_size, area_thres=0.2)
         image, label = random_perspective(image, label, size=crop_size, 
                                           degrees=self.degrees, translate=self.translate, 
                                           scale=self.scale, perspective=self.perspective)

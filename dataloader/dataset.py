@@ -11,8 +11,7 @@ from tqdm import tqdm
 
 from transform import *
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]
+FILE = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 

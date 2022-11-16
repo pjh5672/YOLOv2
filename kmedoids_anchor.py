@@ -48,7 +48,7 @@ def collect_all_boxes_wh(dataset, apply_image=False):
     return np.concatenate(boxes_wh, axis=0)
 
 
-def kmeans_iou(boxes_wh, n_cluster):
+def kmedoids_iou(boxes_wh, n_cluster):
     rows = boxes_wh.shape[0]
     distances = np.empty((rows, n_cluster))
     last_clusters = np.zeros((rows,))
@@ -92,7 +92,7 @@ def main():
 
     dataset = Dataset(yaml_path=args.data, phase='train')
     boxes_wh = collect_all_boxes_wh(dataset=dataset, apply_image=args.apply_img)
-    clusters, boxes_info = kmeans_iou(boxes_wh=boxes_wh, n_cluster=5)
+    clusters, boxes_info = kmedoids_iou(boxes_wh=boxes_wh, n_cluster=5)
     ratios = [round(item, 2) for item in (clusters[:, 0] / clusters[:, 1])]
 
     logger.info(f"Avg IOU: {avg_iou(boxes_wh, clusters) * 100:.2f}%")

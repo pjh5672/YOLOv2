@@ -23,8 +23,9 @@ class YoloModel(nn.Module):
         self.num_classes = num_classes
         self.num_attributes = 1 + 4 + num_classes
         self.backbone, feat_dims = build_backbone(pretrained=True)
-        self.neck = PassthroughLayer(stride=2)
-        self.head = YoloHead(in_channels=64 * 4 + 1024, out_channels=self.num_attributes*self.num_boxes)
+        self.neck = PassthroughLayer(in_channels=feat_dims, stride=2)
+        self.head = YoloHead(in_channels=self.neck.feat_dims[0]*4+self.neck.feat_dims[1], 
+                             out_channels=self.num_attributes*self.num_boxes)
         self.anchors = torch.tensor(anchors)
         self.set_grid_xy(input_size=input_size)
 
