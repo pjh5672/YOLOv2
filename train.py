@@ -141,7 +141,7 @@ def main():
     model = model.cuda(args.rank)
     criterion = YoloLoss(input_size=args.img_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
-    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=one_cycle(1, args.lr_decy, args.num_epochs))
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=one_cycle(1, args.lr_decay, args.num_epochs))
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
 
     if args.resume:
