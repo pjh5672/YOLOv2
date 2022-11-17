@@ -40,7 +40,7 @@ class AugmentTransform:
         self.degrees = 0
         self.translate = 0.1
         self.scale = 0.7
-        self.perspective = 0.001
+        self.perspective = 0.0
     
 
     def __call__(self, image, label):
@@ -99,9 +99,10 @@ def to_square_image(image, label):
 class Albumentations:
     def __init__(self, p_flipud=0.0, p_fliplr=0.5):
         self.transform = A.Compose([
-            A.Blur(p=0.1),
-            A.ToGray(p=0.1),
-            A.CLAHE(p=0.1),
+            A.Blur(p=0.01),
+            A.ToGray(p=0.01),
+            A.CLAHE(p=0.01),
+            A.ChannelShuffle(p=0.01),
             A.VerticalFlip(p=p_flipud),
             A.HorizontalFlip(p=p_fliplr),
         ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_ids']))
@@ -205,7 +206,7 @@ if __name__ == "__main__":
     from utils import visualize_target, generate_random_color, clip_box_coordinate
 
     yaml_path = ROOT / 'data' / 'toy.yaml'
-    input_size = 448
+    input_size = 416
     train_dataset = Dataset(yaml_path=yaml_path, phase='train')
     # transformer = BasicTransform(input_size=input_size)
     transformer = AugmentTransform(input_size=input_size)
