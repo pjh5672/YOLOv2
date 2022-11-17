@@ -38,7 +38,7 @@ class AugmentTransform:
         self.gain_v = 0.3
         self.degrees = 0
         self.translate = 0.1
-        self.scale = 0.7
+        self.scale = 0.75
         self.perspective = 0.0
     
 

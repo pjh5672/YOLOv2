@@ -92,7 +92,7 @@ def parse_args(make_dirs=True):
     parser.add_argument("--num_epochs", type=int, default=200, help="Number of training epochs")
     parser.add_argument("--warmup", type=int, default=1, help="Epochs for warming up training")
     parser.add_argument("--base_lr", type=float, default=0.003, help="Base learning rate")
-    parser.add_argument("--lr_decay", type=float, default=0.01, help="Learning rate decay")
+    parser.add_argument("--lr_decay", type=float, default=0.1, help="Learning rate decay")
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum")
     parser.add_argument("--weight_decay", type=float, default=0.0005, help="Weight decay")
     parser.add_argument("--conf_thres", type=float, default=0.01, help="Threshold to filter confidence score")
