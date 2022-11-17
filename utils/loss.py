@@ -4,8 +4,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
@@ -17,6 +16,8 @@ class YoloLoss():
     def __init__(self, input_size, anchors):
         self.num_boxes = 5
         self.lambda_obj = 5.0
+        self.lambda_noobj = 1.0
+        self.lambda_coord = 5.0
         self.iou_threshold = 0.5
         self.num_attributes = 1 + 4 + 1
         self.obj_loss_func = nn.BCEWithLogitsLoss(reduction='none')
@@ -60,7 +61,7 @@ class YoloLoss():
         cls_loss = self.cls_loss_func(pred_cls, target_cls) * target_obj
         cls_loss = cls_loss.sum() / self.bs
 
-        multipart_loss = self.lambda_obj * obj_loss + noobj_loss + (txty_loss + twth_loss) + cls_loss
+        multipart_loss = self.lambda_obj * obj_loss + self.lambda_noobj * noobj_loss + self.lambda_coord * (txty_loss + twth_loss) + cls_loss
         return multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
 
 
