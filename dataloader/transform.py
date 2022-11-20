@@ -98,10 +98,10 @@ def to_square_image(image, label):
 class Albumentations:
     def __init__(self, p_flipud=0.0, p_fliplr=0.5):
         self.transform = A.Compose([
-            A.Blur(p=0.01),
-            A.ToGray(p=0.01),
-            A.CLAHE(p=0.01),
-            A.ChannelShuffle(p=0.01),
+            A.Blur(p=0.1),
+            A.ToGray(p=0.1),
+            A.CLAHE(p=0.1),
+            A.ChannelShuffle(p=0.1),
             A.VerticalFlip(p=p_flipud),
             A.HorizontalFlip(p=p_fliplr),
         ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_ids']))

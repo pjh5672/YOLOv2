@@ -1,21 +1,19 @@
-PATH: d:/DATASET/PASCAL-VOC
+PATH: ../dataset
 
 TRAIN: 
- - images/train2007
-#  - images/train2012
- - images/val2007
-#  - images/val2012
+ - yolo10/images
 VAL: 
- - images/test2007
+ - yolo6/images
 
-MAP_FILE_NAME: voc_val.json
+MAP_FILE_NAME: toy_dataset_val2.json
 
 ANCHORS:
-  [[0.276,      0.608     ],
-  [0.068,      0.11711711],
-  [0.16,       0.26666668],
-  [0.492,      0.40533334],
-  [0.774,      0.82      ]]
+   [[0.47070834, 0.7668643 ],
+    [0.6636637,  0.274     ],
+    [0.875,      0.61066663],
+    [0.8605263,  0.8736842 ],
+    [0.283375,   0.5775    ]]
+
 
 CLASS_INFO: {
   0: 'aeroplane',
