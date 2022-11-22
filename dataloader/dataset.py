@@ -9,8 +9,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-# from transform import *
-from transform2 import BaseTransform, Augmentation
+from transform import BasicTransform, AugmentTransform
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -63,7 +62,6 @@ class Dataset:
     def get_image(self, index):
         filename = self.image_paths[index].split(os.sep)[-1]
         image = cv2.imread(self.image_paths[index])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return filename, image
 
 
@@ -153,53 +151,23 @@ class Dataset:
         return filenames, torch.stack(images, dim=0), labels, shapes
 
 
-
-MEAN = 0.485, 0.456, 0.406 # RGB
-STD = 0.229, 0.224, 0.225 # RGB
-
-def to_image(im, mean=MEAN, std=STD):
-    # denorm_tensor = tensor.clone()
-    # for t, m, s in zip(denorm_tensor, mean, std):
-    #     t.mul_(s).add_(m)
-    # denorm_tensor.clamp_(min=0, max=1.)
-    # denorm_tensor *= 255
-    # image = denorm_tensor.permute(1,2,0).numpy().astype(np.uint8)
-    image = im.permute(1, 2, 0).numpy()
-    image = (image * std + mean) * 255
-    image = image.astype(np.uint8).copy()
-    return image
-
 if __name__ == "__main__":
-    from utils import visualize_target, generate_random_color
-    
-    yaml_path = ROOT / 'data' / 'toy2.yaml'
+    yaml_path = ROOT / 'data' / 'voc.yaml'
     input_size = 416
     
     train_dataset = Dataset(yaml_path=yaml_path, phase='train')
-    train_transformer = Augmentation(size=input_size)
-    # train_transformer = BaseTransform(size=input_size)
+    train_transformer = AugmentTransform(input_size=input_size)
     train_dataset.load_transformer(transformer=train_transformer)
-    # val_dataset = Dataset(yaml_path=yaml_path, phase='val')
-    # val_transformer = BaseTransform(size=input_size)
-    # val_dataset.load_transformer(transformer=val_transformer)
+    val_dataset = Dataset(yaml_path=yaml_path, phase='val')
+    val_transformer = BasicTransform(input_size=input_size)
+    val_dataset.load_transformer(transformer=val_transformer)
 
-    # print(len(train_dataset), len(val_dataset))
-    # for index, minibatch in enumerate(train_dataset):
-    #     filename, input_tensor, label, shapes = train_dataset[index]
-    # print(f"train dataset sanity-check done")
+    print(len(train_dataset), len(val_dataset))
+    for index, minibatch in enumerate(train_dataset):
+        filename, input_tensor, label, shapes = train_dataset[index]
+    print(f"train dataset sanity-check done")
 
-    # for index, minibatch in enumerate(val_dataset):
-    #     filename, image, label, shapes = val_dataset[index]
-    #     print(filename, label)
-    # print(f"val dataset sanity-check done")
-
-    class_list = train_dataset.class_list
-    color_list = generate_random_color(len(class_list))
-
-    index = np.random.randint(0, len(train_dataset))
-    filename, input_tensor, label, shape = train_dataset[index]
-    image = to_image(input_tensor)
-    label_np = label.numpy()
-    image_with_bbox = visualize_target(image, label_np, class_list, color_list)
-    # print(filename, input_tensor.shape, label)
-    cv2.imwrite('./asset/augment.jpg', image_with_bbox)
+    for index, minibatch in enumerate(val_dataset):
+        filename, image, label, shapes = val_dataset[index]
+        print(filename, label)
+    print(f"val dataset sanity-check done")

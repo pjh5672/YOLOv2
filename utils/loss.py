@@ -15,10 +15,9 @@ class YoloLoss():
     def __init__(self, input_size, anchors):
         self.num_boxes = 5
         self.lambda_obj = 5.0
-        self.lambda_noobj = 0.5
         self.iou_threshold = 0.5
         self.num_attributes = 1 + 4 + 1
-        self.obj_loss_func = nn.BCEWithLogitsLoss(reduction='none')
+        self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
         self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
         self.anchors = anchors
@@ -59,7 +58,7 @@ class YoloLoss():
         cls_loss = self.cls_loss_func(pred_cls, target_cls) * target_obj
         cls_loss = cls_loss.sum() / self.bs
 
-        multipart_loss = self.lambda_obj * obj_loss + self.lambda_noobj * noobj_loss + (txty_loss + twth_loss) + cls_loss
+        multipart_loss = self.lambda_obj * obj_loss + noobj_loss + (txty_loss + twth_loss) + cls_loss
         return multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
 
 
@@ -71,38 +70,12 @@ class YoloLoss():
         self.grid_y = grid_y.contiguous().view((1, -1, 1))
 
 
-    def calculate_iou_target_with_anchors_v1(self, target_wh, anchor_wh):
+    def calculate_iou_target_with_anchors(self, target_wh, anchor_wh):
         w1, h1 = target_wh
         w2, h2 = anchor_wh.t()
         inter = torch.min(w1, w2) * torch.min(h1, h2)
         union = (w1 * h1) + (w2 * h2) - inter
         return inter/union
-
-
-    def calculate_iou_target_with_anchors_v2(self, target_wh, anchor_wh):
-        w1, h1 = target_wh
-        w2, h2 = anchor_wh.t()
-
-        t_xmin = 0 - w1/2
-        t_ymin = 0 - h1/2
-        t_xmax = 0 + w1/2
-        t_ymax = 0 + h1/2
-        t_area = w1 * h1
-        a_xmin = 0 - w2/2
-        a_ymin = 0 - h2/2
-        t_xmax = 0 + w2/2
-        a_ymax = 0 + h2/2
-        a_area = w2 * h2
-
-        xx1 = torch.max(t_xmin, a_xmin)
-        yy1 = torch.max(t_ymin, a_ymin)
-        xx2 = torch.min(t_xmax, t_xmax)
-        yy2 = torch.min(t_ymax, a_ymax)
-
-        inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
-        union = abs(t_area) + abs(a_area) - inter
-        inter[inter.gt(0)] = inter[inter.gt(0)] / union[inter.gt(0)]
-        return inter
 
 
     def build_target(self, label):
@@ -115,7 +88,7 @@ class YoloLoss():
                 cls_id = item[0].long()
                 grid_i = (item[1] * self.grid_size).long()
                 grid_j = (item[2] * self.grid_size).long()
-                ious_target_with_anchor = self.calculate_iou_target_with_anchors_v2(target_wh=item[3:5], anchor_wh=self.anchors)
+                ious_target_with_anchor = self.calculate_iou_target_with_anchors(target_wh=item[3:5], anchor_wh=self.anchors)
                 best_index = ious_target_with_anchor.max(dim=0).indices
 
                 tx = (item[1] * self.grid_size) - grid_i
@@ -141,15 +114,15 @@ class YoloLoss():
 
 
     def calculate_iou(self, pred_box_cxcywh, target_box_cxcywh):
-        pred_box_x1y1x2y2 = self.transform_cxcywh_to_x1y1x2y2(pred_box_cxcywh)
-        target_box_x1y1x2y2 = self.transform_cxcywh_to_x1y1x2y2(target_box_cxcywh)
+        pred_box_x1y1x2y2 = self.transform_txtytwth_to_x1y1x2y2(pred_box_cxcywh)
+        target_box_x1y1x2y2 = self.transform_txtytwth_to_x1y1x2y2(target_box_cxcywh)
 
-        x1 = torch.max(pred_box_x1y1x2y2[..., 0], target_box_x1y1x2y2[..., 0])
-        y1 = torch.max(pred_box_x1y1x2y2[..., 1], target_box_x1y1x2y2[..., 1])
-        x2 = torch.min(pred_box_x1y1x2y2[..., 2], target_box_x1y1x2y2[..., 2])
-        y2 = torch.min(pred_box_x1y1x2y2[..., 3], target_box_x1y1x2y2[..., 3])
+        xx1 = torch.max(pred_box_x1y1x2y2[..., 0], target_box_x1y1x2y2[..., 0])
+        yy1 = torch.max(pred_box_x1y1x2y2[..., 1], target_box_x1y1x2y2[..., 1])
+        xx2 = torch.min(pred_box_x1y1x2y2[..., 2], target_box_x1y1x2y2[..., 2])
+        yy2 = torch.min(pred_box_x1y1x2y2[..., 3], target_box_x1y1x2y2[..., 3])
 
-        inter = (x2 - x1).clamp(min=0) * (y2 - y1).clamp(min=0)
+        inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
         pred_area = (pred_box_x1y1x2y2[..., 2] - pred_box_x1y1x2y2[..., 0]) * (pred_box_x1y1x2y2[..., 3] - pred_box_x1y1x2y2[..., 1])
         target_area = (target_box_x1y1x2y2[..., 2] - target_box_x1y1x2y2[..., 0]) * (target_box_x1y1x2y2[..., 3] - target_box_x1y1x2y2[..., 1])
         union = abs(pred_area) + abs(target_area) - inter
@@ -157,11 +130,11 @@ class YoloLoss():
         return inter
 
 
-    def transform_cxcywh_to_x1y1x2y2(self, boxes):
+    def transform_txtytwth_to_x1y1x2y2(self, boxes):
         xc = (boxes[..., 0] + self.grid_x.to(self.device)) / self.grid_size
         yc = (boxes[..., 1] + self.grid_y.to(self.device)) / self.grid_size
-        w = (torch.exp(boxes[..., 2]) * self.anchors[:, 0].to(self.device))
-        h = (torch.exp(boxes[..., 3]) * self.anchors[:, 1].to(self.device))
+        w = torch.exp(boxes[..., 2]) * self.anchors[:, 0].to(self.device)
+        h = torch.exp(boxes[..., 3]) * self.anchors[:, 1].to(self.device)
         x1 = xc - w / 2
         y1 = yc - h / 2
         x2 = xc + w / 2

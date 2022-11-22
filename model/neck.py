@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from element import Conv, weight_init_kaiming_uniform
+from element import Conv
 
 
 
