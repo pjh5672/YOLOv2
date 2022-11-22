@@ -103,7 +103,7 @@ class YoloLoss():
                     if index == best_index:
                         target[grid_j, grid_i, index, 0] = 1.0
                     else:
-                        if iou >= self.iou_threshold:
+                        if iou > self.iou_threshold:
                             target[grid_j, grid_i, index, 0] = -1.0
             return target
 
