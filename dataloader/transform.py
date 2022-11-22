@@ -15,8 +15,8 @@ if str(ROOT) not in sys.path:
 from utils import transform_xcycwh_to_x1y1x2y2, transform_x1y1x2y2_to_xcycwh, scale_to_original, scale_to_norm
 
 
-MEAN = 0.485, 0.456, 0.406 # RGB
-STD = 0.229, 0.224, 0.225 # RGB
+MEAN = 0.406, 0.456, 0.485 # BGR
+STD = 0.225, 0.224, 0.229 # BGR
 
 
 class BasicTransform(object):
@@ -34,17 +34,17 @@ class AugmentTransform:
         self.input_size = input_size
         self.flip = Albumentations(p_flipud=0.0, p_fliplr=0.5)
         self.gain_h = 0.015
-        self.gain_s = 0.5
+        self.gain_s = 0.6
         self.gain_v = 0.3
         self.degrees = 0
-        self.translate = 0.1
-        self.scale = 0.7
+        self.translate = 0.2
+        self.scale = 0.6
         self.perspective = 0.0
     
 
     def __call__(self, image, label):
         img_h, img_w = image.shape[:2]
-        crop_size = min(img_h, img_w)
+        crop_size = random.randint(int(min(img_h, img_w) * 0.8), int(min(img_h, img_w) * 1.0))
         image, label = self.flip(image=image, label=label)
         image = augment_hsv(image, gain_h=self.gain_h, gain_s=self.gain_s, gain_v=self.gain_v)
         label[:, 1:5] = transform_xcycwh_to_x1y1x2y2(label[:, 1:5])
@@ -98,10 +98,10 @@ def to_square_image(image, label):
 class Albumentations:
     def __init__(self, p_flipud=0.0, p_fliplr=0.5):
         self.transform = A.Compose([
-            A.Blur(p=0.01),
-            A.ToGray(p=0.01),
-            A.CLAHE(p=0.01),
-            A.ChannelShuffle(p=0.01),
+            A.Blur(p=0.1),
+            A.ToGray(p=0.1),
+            A.CLAHE(p=0.1),
+            A.ChannelShuffle(p=0.1),
             A.VerticalFlip(p=p_flipud),
             A.HorizontalFlip(p=p_fliplr),
         ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_ids']))
@@ -202,9 +202,9 @@ def box_candidates(box1, box2, wh_thres=4, ar_thres=20, area_thres=0.05, eps=1e-
 
 if __name__ == "__main__":
     from dataset import Dataset
-    from utils import visualize_target, generate_random_color, clip_box_coordinate
+    from utils import visualize_target, generate_random_color
 
-    yaml_path = ROOT / 'data' / 'toy.yaml'
+    yaml_path = ROOT / 'data' / 'voc.yaml'
     input_size = 416
     train_dataset = Dataset(yaml_path=yaml_path, phase='train')
     # transformer = BasicTransform(input_size=input_size)

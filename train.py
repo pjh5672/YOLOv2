@@ -10,7 +10,6 @@ from datetime import datetime
 from collections import defaultdict
 
 import torch
-import numpy as np
 from tqdm import tqdm, trange
 from thop import profile
 from torch import nn
@@ -28,7 +27,7 @@ torch.manual_seed(SEED)
 
 from dataloader import Dataset, BasicTransform, AugmentTransform
 from model import YoloModel
-from utils import YoloLoss, Evaluator, generate_random_color, build_basic_logger, set_lr, one_cycle
+from utils import YoloLoss, Evaluator, generate_random_color, build_basic_logger, set_lr
 from val import validate, result_analyis
 
 
@@ -43,9 +42,7 @@ def train(args, dataloader, model, criterion, optimizer):
     for i, minibatch in enumerate(dataloader):
         ni = i + len(dataloader) * (epoch - 1)
         if ni <= args.nw:
-            xi = [0, args.nw]
-            args.accumulate = max(1, np.interp(ni, xi, [1, args.nbs / args.bs]).round())
-            set_lr(optimizer, np.interp(ni, xi, [1e-5, args.base_lr]))
+            set_lr(optimizer, args.base_lr * pow(ni / (args.nw), 4))
 
         images, labels = minibatch[1], minibatch[2]
         
@@ -59,12 +56,8 @@ def train(args, dataloader, model, criterion, optimizer):
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
         loss[0].backward()
-
-        if ni - args.last_opt_step >= args.accumulate:
-            nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
-            optimizer.step()
-            optimizer.zero_grad()
-            args.last_opt_step = ni
+        optimizer.step()
+        optimizer.zero_grad()
     
         for loss_name, loss_value in zip(loss_type, loss):
             if not torch.isfinite(loss_value) and loss_name != 'multipart':
@@ -88,15 +81,14 @@ def parse_args(make_dirs=True):
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--bs", type=int, default=32, help="Batch size")
-    parser.add_argument("--nbs", type=int, default=64, help="Nominal batch size")
     parser.add_argument("--num_epochs", type=int, default=200, help="Number of training epochs")
     parser.add_argument("--warmup", type=int, default=1, help="Epochs for warming up training")
-    parser.add_argument("--base_lr", type=float, default=0.003, help="Base learning rate")
-    parser.add_argument("--lr_decay", type=float, default=0.1, help="Learning rate decay")
+    parser.add_argument("--base_lr", type=float, default=0.001, help="Base learning rate")
+    parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum")
     parser.add_argument("--weight_decay", type=float, default=0.0005, help="Weight decay")
-    parser.add_argument("--conf_thres", type=float, default=0.01, help="Threshold to filter confidence score")
-    parser.add_argument("--nms_thres", type=float, default=0.6, help="Threshold to filter Box IoU of NMS process")
+    parser.add_argument("--conf_thres", type=float, default=0.001, help="Threshold to filter confidence score")
+    parser.add_argument("--nms_thres", type=float, default=0.5, help="Threshold to filter Box IoU of NMS process")
     parser.add_argument("--rank", type=int, default=0, help="Process id for computation")
     parser.add_argument("--img_interval", type=int, default=10, help="Interval to log train/val image")
     parser.add_argument("--workers", type=int, default=8, help="Number of workers used in dataloader")
@@ -131,17 +123,15 @@ def main():
     args.class_list = train_dataset.class_list
     args.color_list = generate_random_color(len(args.class_list))
     args.nw = max(round(args.warmup * len(train_loader)), 100)
-    args.accumulate = max(round(args.nbs / args.bs), 1)
     args.mAP_file_path = val_dataset.mAP_file_path
     args.train_size = args.img_size
-    args.last_opt_step = -1
 
     model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model = model.cuda(args.rank)
     criterion = YoloLoss(input_size=args.img_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
-    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=one_cycle(1, args.lr_decay, args.num_epochs))
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_decay, gamma=0.1)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
 
     if args.resume:
@@ -176,7 +166,7 @@ def main():
                     "optimizer_state": optimizer.state_dict(),
                     "scheduler_state": scheduler.state_dict()}
 
-        if epoch > 10:
+        if epoch % 10 == 0:
             val_loader = tqdm(val_loader, desc=f"[VAL:{epoch:03d}/{args.num_epochs:03d}]", ncols=115, leave=False)
             mAP_dict, eval_text = validate(args=args, dataloader=val_loader, model=model, evaluator=evaluator, epoch=epoch)
             ap50 = mAP_dict["all"]["mAP_50"]

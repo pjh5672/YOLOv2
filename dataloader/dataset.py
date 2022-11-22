@@ -9,9 +9,9 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from transform import *
+from transform import BasicTransform, AugmentTransform
 
-FILE = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
@@ -62,7 +62,6 @@ class Dataset:
     def get_image(self, index):
         filename = self.image_paths[index].split(os.sep)[-1]
         image = cv2.imread(self.image_paths[index])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return filename, image
 
 
@@ -152,13 +151,9 @@ class Dataset:
         return filenames, torch.stack(images, dim=0), labels, shapes
 
 
-
 if __name__ == "__main__":
-    FILE = Path(__file__).resolve()
-    ROOT = FILE.parents[1]
-    
-    yaml_path = ROOT / 'data' / 'toy.yaml'
-    input_size = 448
+    yaml_path = ROOT / 'data' / 'voc.yaml'
+    input_size = 416
     
     train_dataset = Dataset(yaml_path=yaml_path, phase='train')
     train_transformer = AugmentTransform(input_size=input_size)
@@ -174,4 +169,5 @@ if __name__ == "__main__":
 
     for index, minibatch in enumerate(val_dataset):
         filename, image, label, shapes = val_dataset[index]
+        print(filename, label)
     print(f"val dataset sanity-check done")
