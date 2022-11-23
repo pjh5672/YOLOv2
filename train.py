@@ -25,7 +25,7 @@ SEED = 2023
 random.seed(SEED)
 torch.manual_seed(SEED)
 
-from dataloader import Dataset, BasicTransform, AugmentTransform, BaseTransform, Augmentation
+from dataloader import Dataset, BasicTransform, AugmentTransform
 from model import YoloModel
 from utils import YoloLoss, Evaluator, generate_random_color, build_basic_logger, set_lr
 from val import validate, result_analyis
@@ -111,13 +111,11 @@ def main():
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / 'train.log', set_level=1)
     train_dataset = Dataset(yaml_path=args.data, phase='train')
-    train_transformer = Augmentation(size=args.img_size)
-    # train_transformer = AugmentTransform(input_size=args.img_size)
+    train_transformer = AugmentTransform(input_size=args.img_size)
     train_dataset.load_transformer(transformer=train_transformer)
     train_loader = DataLoader(dataset=train_dataset, collate_fn=Dataset.collate_fn, batch_size=args.bs, shuffle=True, pin_memory=True, num_workers=args.workers)
     val_dataset = Dataset(yaml_path=args.data, phase='val')
-    # val_transformer = BasicTransform(input_size=args.img_size)
-    val_transformer = BaseTransform(size=args.img_size)
+    val_transformer = BasicTransform(input_size=args.img_size)
     val_dataset.load_transformer(transformer=val_transformer)
     val_loader = DataLoader(dataset=val_dataset, collate_fn=Dataset.collate_fn, batch_size=args.bs, shuffle=False, pin_memory=True, num_workers=args.workers)
     

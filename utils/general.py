@@ -27,12 +27,6 @@ def scale_to_norm(boxes, image_w, image_h):
     return boxes
 
 
-def clip_box_coordinate(boxes):
-    boxes = transform_xcycwh_to_x1y1x2y2(boxes)
-    boxes = transform_x1y1x2y2_to_xcycwh(boxes)
-    return boxes
-
-
 def transform_x1y1x2y2_to_x1y1wh(boxes):
     x1y1 = boxes[:, :2]
     wh = boxes[:, 2:] - boxes[:, :2]

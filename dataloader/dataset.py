@@ -9,13 +9,13 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from transform import BasicTransform, AugmentTransform
+from transform import BasicTransform, AugmentTransform, to_tensor
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
-from utils import clip_box_coordinate, transform_xcycwh_to_x1y1wh
+from utils import transform_xcycwh_to_x1y1wh
 
 
 
@@ -45,11 +45,11 @@ class Dataset:
 
     def __getitem__(self, index):
         filename, image, label = self.get_GT_item(index)
-        input_tensor, label = self.transformer(image=image, label=label)
-        label[:, 1:5] = clip_box_coordinate(label[:, 1:5])
-        label = torch.from_numpy(label)
         shape = image.shape
-        return filename, input_tensor, label, shape
+        image, boxes, labels = train_transformer(image=image, boxes=label[:, 1:5], labels=label[:, 0])
+        img_tensor = to_tensor(image)
+        label = torch.from_numpy(np.concatenate((labels[:, np.newaxis], boxes), axis=1))
+        return filename, img_tensor, label, shape
 
     
     def get_GT_item(self, index):
@@ -85,7 +85,7 @@ class Dataset:
 
     def check_no_label(self, label):
         if len(label) == 0:
-            label = np.array([[-1, 0.5, 0.5, 1.0, 1.0]], dtype=np.float32)
+            label = np.array([[-1, 0, 0, 0, 0]], dtype=np.float32)
         return label
 
 
@@ -145,15 +145,14 @@ class Dataset:
         
         for _, items in enumerate(minibatch):
             filenames.append(items[0])
-            images.append(torch.from_numpy(items[1]).permute(2, 0, 1))
-            # images.append(items[1])
+            images.append(items[1])
             labels.append(items[2])
             shapes.append(items[3])
         return filenames, torch.stack(images, dim=0), labels, shapes
 
 
 if __name__ == "__main__":
-    yaml_path = ROOT / 'data' / 'voc.yaml'
+    yaml_path = ROOT / 'data' / 'toy.yaml'
     input_size = 416
     
     train_dataset = Dataset(yaml_path=yaml_path, phase='train')
@@ -165,10 +164,9 @@ if __name__ == "__main__":
 
     print(len(train_dataset), len(val_dataset))
     for index, minibatch in enumerate(train_dataset):
-        filename, input_tensor, label, shapes = train_dataset[index]
+        filename, image, label, shape = train_dataset[index]
     print(f"train dataset sanity-check done")
 
     for index, minibatch in enumerate(val_dataset):
-        filename, image, label, shapes = val_dataset[index]
-        print(filename, label)
+        filename, image, label, shape = val_dataset[index]
     print(f"val dataset sanity-check done")
