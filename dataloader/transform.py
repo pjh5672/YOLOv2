@@ -27,7 +27,7 @@ def denormalize(image, mean=MEAN, std=STD):
     return image.astype(np.uint8)
 
 
-class Compose():
+class Compose:
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -36,7 +36,8 @@ class Compose():
             image, boxes, labels = t(image, boxes, labels)
         return image, boxes, labels
 
-class Normalize():
+
+class Normalize:
     def __init__(self, mean, std):
         self.mean = np.array(mean, dtype=np.float32)
         self.std = np.array(std, dtype=np.float32)
@@ -47,7 +48,8 @@ class Normalize():
         image /= self.std
         return image, boxes, labels
 
-class Resize():
+
+class Resize:
     def __init__(self, size=640):
         self.size = size
 
@@ -55,7 +57,8 @@ class Resize():
         image = cv2.resize(image, (self.size, self.size))
         return image, boxes, labels
 
-class BasicTransform():
+
+class BasicTransform:
     def __init__(self, input_size, mean=MEAN, std=STD):
         mean = np.array(mean, dtype=np.float32)
         std = np.array(std, dtype=np.float32)
@@ -69,7 +72,8 @@ class BasicTransform():
         image, boxes, labels = self.tfs(image, boxes, labels)
         return image, boxes, labels
 
-class AugmentTransform():
+
+class AugmentTransform:
     def __init__(self, input_size, mean=MEAN, std=STD):
         mean = np.array(mean, dtype=np.float32)
         std = np.array(std, dtype=np.float32)
@@ -100,7 +104,8 @@ class AugmentTransform():
         image, boxes, labels = self.tfs(image, boxes, labels)
         return image, boxes, labels
 
-class RandomBrightness():
+
+class RandomBrightness:
     def __init__(self, delta=32):
         assert delta >= 0.0
         assert delta <= 255.0
@@ -111,7 +116,8 @@ class RandomBrightness():
             image += np.random.uniform(-self.delta, self.delta)
         return image, boxes, labels
 
-class RandomContrast():
+
+class RandomContrast:
     def __init__(self, lower=0.5, upper=1.5):
         self.lower = lower
         self.upper = upper
@@ -123,7 +129,8 @@ class RandomContrast():
             image *= np.random.uniform(self.lower, self.upper)
         return image, boxes, labels
 
-class ConvertColor():
+
+class ConvertColor:
     def __init__(self, color_from="BGR", color_to="HSV"):
         self.color_from = color_from
         self.color_to = color_to
@@ -137,7 +144,8 @@ class ConvertColor():
             raise NotImplementedError
         return image, boxes, labels
 
-class RandomHue():
+
+class RandomHue:
     def __init__(self, delta=18.0):
         assert delta >= 0.0 and delta <= 360.0
         self.delta = delta
@@ -149,7 +157,8 @@ class RandomHue():
             image[:, :, 0][image[:, :, 0] < 0.0] += 360.0
         return image, boxes, labels
 
-class RandomSaturation():
+
+class RandomSaturation:
     def __init__(self, lower=0.5, upper=1.5):
         self.lower = lower
         self.upper = upper
@@ -161,35 +170,40 @@ class RandomSaturation():
             image[:, :, 1] *= np.random.uniform(self.lower, self.upper)
         return image, boxes, labels
 
-class ToAbsoluteCoords():
+
+class ToAbsoluteCoords:
     def __call__(self, image, boxes, labels=None):
         height, width, _ = image.shape
         boxes[:, [0, 2]] *= width
         boxes[:, [1, 3]] *= height
         return image, boxes, labels
 
-class ToPercentCoords():
+
+class ToPercentCoords:
     def __call__(self, image, boxes, labels=None):
         height, width, _ = image.shape
         boxes[:, [0, 2]] /= width
         boxes[:, [1, 3]] /= height
         return image, boxes, labels
 
-class ToXminYminXmaxYmax():
+
+class ToXminYminXmaxYmax:
     def __call__(self, image, boxes, labels=None):
         x1y1 = boxes[:, :2] - boxes[:, 2:] / 2
         x2y2 = boxes[:, :2] + boxes[:, 2:] / 2
         boxes = np.concatenate((x1y1, x2y2), axis=1).clip(min=0, max=1)
         return image, boxes, labels
 
-class ToXcenYcenWH():
+
+class ToXcenYcenWH:
     def __call__(self, image, boxes, labels=None):
         wh = boxes[:, 2:] - boxes[:, :2]
         xcyc = boxes[:, :2] + wh / 2
         boxes = np.concatenate((xcyc, wh), axis=1).clip(min=0, max=1)
         return image, boxes, labels
 
-class HorizontalFlip():
+
+class HorizontalFlip:
     def __call__(self, image, boxes, labels=None):
         _, width, _ = image.shape
         if np.random.randint(2):
@@ -197,7 +211,8 @@ class HorizontalFlip():
             boxes[:, 0::2] = width - boxes[:, 2::-2]
         return image, boxes, labels
 
-class Expand():
+
+class Expand:
     def __init__(self, mean):
         self.mean = mean
 
@@ -217,7 +232,8 @@ class Expand():
         boxes[:, 2:] += (int(left), int(top))
         return expand_image, boxes, labels
 
-class RandomSampleCrop():
+
+class RandomSampleCrop:
     def __init__(self):
         self.sample_option = (
             # use entire image
@@ -259,7 +275,7 @@ class RandomSampleCrop():
                 rect = np.array([int(left), int(top), int(left+w), int(top+h)])
 
                 overlap = self.compute_IoU(boxes, rect)
-                if overlap.min() < min_iou:
+                if overlap.min() < min_iou and overlap.max() > max_iou:
                     continue
 
                 centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0

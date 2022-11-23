@@ -2,9 +2,9 @@ PATH: d:/DATASET/PASCAL-VOC
 
 TRAIN: 
  - images/train2007
- - images/train2012
+#  - images/train2012
  - images/val2007
- - images/val2012
+#  - images/val2012
 VAL: 
  - images/test2007
 

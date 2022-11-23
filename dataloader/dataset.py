@@ -46,7 +46,7 @@ class Dataset:
     def __getitem__(self, index):
         filename, image, label = self.get_GT_item(index)
         shape = image.shape
-        image, boxes, labels = train_transformer(image=image, boxes=label[:, 1:5], labels=label[:, 0])
+        image, boxes, labels = self.transformer(image=image, boxes=label[:, 1:5], labels=label[:, 0])
         img_tensor = to_tensor(image)
         label = torch.from_numpy(np.concatenate((labels[:, np.newaxis], boxes), axis=1))
         return filename, img_tensor, label, shape

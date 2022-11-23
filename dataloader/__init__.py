@@ -7,4 +7,3 @@ if str(ROOT) not in sys.path:
 
 from .dataset import Dataset
 from .transform import to_image, BasicTransform, AugmentTransform
-from .transform2 import BaseTransform, Augmentation
