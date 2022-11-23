@@ -145,7 +145,8 @@ class Dataset:
         
         for _, items in enumerate(minibatch):
             filenames.append(items[0])
-            images.append(items[1])
+            images.append(torch.from_numpy(items[1]).permute(2, 0, 1))
+            # images.append(items[1])
             labels.append(items[2])
             shapes.append(items[3])
         return filenames, torch.stack(images, dim=0), labels, shapes
