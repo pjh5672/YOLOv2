@@ -37,9 +37,8 @@ class YoloLoss():
         pred_box_twth = predictions[..., 3:5]
         pred_cls = predictions[..., 5:].permute(0, 3, 1, 2)
 
-        target_obj = (targets[..., 0] > 0).float()
+        target_obj = (targets[..., 0] == 1).float()
         target_noobj = (targets[..., 0] == 0).float()
-        target_box_obj = (targets[..., 0] == 1).float()
         target_box_txty = targets[..., 1:3]
         target_box_twth = targets[..., 3:5]
         target_cls = targets[..., 5].long()
@@ -50,13 +49,13 @@ class YoloLoss():
         noobj_loss = self.obj_loss_func(pred_obj, pred_obj * 0) * target_noobj
         noobj_loss = noobj_loss.sum() / self.bs
 
-        txty_loss = self.box_loss_func(pred_box_txty, target_box_txty).sum(dim=-1) * target_box_obj
+        txty_loss = self.box_loss_func(pred_box_txty, target_box_txty).sum(dim=-1) * target_obj
         txty_loss = txty_loss.sum() / self.bs
 
-        twth_loss = self.box_loss_func(pred_box_twth, target_box_twth).sum(dim=-1) * target_box_obj
+        twth_loss = self.box_loss_func(pred_box_twth, target_box_twth).sum(dim=-1) * target_obj
         twth_loss = twth_loss.sum() / self.bs
         
-        cls_loss = self.cls_loss_func(pred_cls, target_cls) * target_box_obj
+        cls_loss = self.cls_loss_func(pred_cls, target_cls) * target_obj
         cls_loss = cls_loss.sum() / self.bs
 
         multipart_loss = self.lambda_obj * obj_loss + noobj_loss + (txty_loss + twth_loss) + cls_loss
@@ -97,14 +96,12 @@ class YoloLoss():
                 tw = torch.log(item[3] / self.anchors[best_index, 0])
                 th = torch.log(item[4] / self.anchors[best_index, 1])
 
+                target[grid_j, grid_i, best_index, 1:5] = torch.tensor([tx, ty, tw, th])
+                target[grid_j, grid_i, best_index, 5] = cls_id
+                
                 for index, iou in enumerate(ious_target_with_anchor):
                     if index == best_index:
-                        if iou > self.iou_threshold:
-                            target[grid_j, grid_i, index, 0] = 1.0
-                            target[grid_j, grid_i, index, 1:5] = torch.tensor([tx, ty, tw, th])
-                            target[grid_j, grid_i, index, 5] = cls_id
-                        else:
-                            target[grid_j, grid_i, index, 0] = 2.0
+                        target[grid_j, grid_i, index, 0] = 1.0
                     else:
                         if iou > self.iou_threshold:
                             target[grid_j, grid_i, index, 0] = -1.0
