@@ -23,7 +23,7 @@ This is a repository for PyTorch implementation of YOLOv2 following the original
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
 | YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.00 | 76.8 | *not reported* | 34.90 |
 | YOLOv2-416<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | - | - | 50.67 | 29.49 |
-| YOLOv2-multi scale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | - | - | 50.67 | 29.49 |
+| YOLOv2-multi scale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.5 | 75.2 | 50.67 | 29.49 |
 
 
 <div align="center">
