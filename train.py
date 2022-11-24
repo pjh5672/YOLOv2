@@ -36,7 +36,6 @@ def train(args, dataloader, model, criterion, optimizer):
     loss_type = ['multipart', 'obj', 'noobj', 'txty', 'twth', 'cls']
     losses = defaultdict(float)
     model.train()
-    model.set_grid_xy(input_size=args.train_size)
     optimizer.zero_grad()
 
     for i, minibatch in enumerate(dataloader):
@@ -47,7 +46,7 @@ def train(args, dataloader, model, criterion, optimizer):
         images, labels = minibatch[1], minibatch[2]
         
         if args.multi_scale:
-            if ni % 10 == 0:
+            if ni % 10 == 0 and ni > 0:
                 args.train_size = random.randint(10, 19) * 32
                 model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
@@ -111,8 +110,10 @@ def main():
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / "train.log", set_level=1)
 
+    args.train_size = 640 if args.multi_scale else args.img_size
+
     train_dataset = Dataset(yaml_path=args.data, phase="train")
-    train_transformer = AugmentTransform(input_size=args.img_size)
+    train_transformer = AugmentTransform(input_size=args.train_size)
     train_dataset.load_transformer(transformer=train_transformer)
     train_loader = DataLoader(dataset=train_dataset, collate_fn=Dataset.collate_fn, batch_size=args.batch_size, 
                               shuffle=True, pin_memory=True, num_workers=args.workers)
@@ -127,12 +128,11 @@ def main():
     args.color_list = generate_random_color(len(args.class_list))
     args.nw = max(round(args.warmup * len(train_loader)), 100)
     args.mAP_file_path = val_dataset.mAP_file_path
-    args.train_size = args.img_size
 
-    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
+    model = YoloModel(input_size=args.train_size, num_classes=len(args.class_list), anchors=args.anchors)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model = model.cuda(args.rank)
-    criterion = YoloLoss(input_size=args.img_size, anchors=model.anchors)
+    criterion = YoloLoss(input_size=args.train_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_decay, gamma=0.1)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
