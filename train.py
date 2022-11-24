@@ -133,6 +133,7 @@ def main():
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model.set_grid_xy(input_size=args.train_size)
     model = model.cuda(args.rank)
+    criterion = YoloLoss(input_size=args.train_size, anchors=model.anchors)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_decay, gamma=0.1)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
