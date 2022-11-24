@@ -75,26 +75,26 @@ def train(args, dataloader, model, criterion, optimizer):
 
 def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp_name", type=str, required=True, help="Name to log training")
+    parser.add_argument("--exp", type=str, required=True, help="Name to log training")
     parser.add_argument("--resume", type=str, nargs='?', const=True ,help="Name to resume path")
     parser.add_argument('--multi_scale', action='store_true', help='Multi-scale training')
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
-    parser.add_argument("--bs", type=int, default=32, help="Batch size")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--num_epochs", type=int, default=200, help="Number of training epochs")
+    parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
     parser.add_argument("--warmup", type=int, default=1, help="Epochs for warming up training")
     parser.add_argument("--base_lr", type=float, default=0.001, help="Base learning rate")
-    parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum")
     parser.add_argument("--weight_decay", type=float, default=0.0005, help="Weight decay")
     parser.add_argument("--conf_thres", type=float, default=0.001, help="Threshold to filter confidence score")
-    parser.add_argument("--nms_thres", type=float, default=0.5, help="Threshold to filter Box IoU of NMS process")
+    parser.add_argument("--nms_thres", type=float, default=0.6, help="Threshold to filter Box IoU of NMS process")
     parser.add_argument("--rank", type=int, default=0, help="Process id for computation")
     parser.add_argument("--img_interval", type=int, default=10, help="Interval to log train/val image")
     parser.add_argument("--workers", type=int, default=8, help="Number of workers used in dataloader")
     args = parser.parse_args()
     args.data = ROOT / "data" / args.data
-    args.exp_path = ROOT / 'experiment' / args.exp_name
+    args.exp_path = ROOT / 'experiment' / args.exp
     args.weight_dir = args.exp_path / 'weight'
     args.img_log_dir = args.exp_path / 'train_image'
     args.load_path = args.weight_dir / 'last.pt' if args.resume else None
@@ -109,15 +109,18 @@ def main():
     global epoch, logger
     
     args = parse_args(make_dirs=True)
-    logger = build_basic_logger(args.exp_path / 'train.log', set_level=1)
-    train_dataset = Dataset(yaml_path=args.data, phase='train')
+    logger = build_basic_logger(args.exp_path / "train.log", set_level=1)
+
+    train_dataset = Dataset(yaml_path=args.data, phase="train")
     train_transformer = AugmentTransform(input_size=args.img_size)
     train_dataset.load_transformer(transformer=train_transformer)
-    train_loader = DataLoader(dataset=train_dataset, collate_fn=Dataset.collate_fn, batch_size=args.bs, shuffle=True, pin_memory=True, num_workers=args.workers)
-    val_dataset = Dataset(yaml_path=args.data, phase='val')
+    train_loader = DataLoader(dataset=train_dataset, collate_fn=Dataset.collate_fn, batch_size=args.batch_size, 
+                              shuffle=True, pin_memory=True, num_workers=args.workers)
+    val_dataset = Dataset(yaml_path=args.data, phase="val")
     val_transformer = BasicTransform(input_size=args.img_size)
     val_dataset.load_transformer(transformer=val_transformer)
-    val_loader = DataLoader(dataset=val_dataset, collate_fn=Dataset.collate_fn, batch_size=args.bs, shuffle=False, pin_memory=True, num_workers=args.workers)
+    val_loader = DataLoader(dataset=val_dataset, collate_fn=Dataset.collate_fn, batch_size=args.batch_size, 
+                            shuffle=False, pin_memory=True, num_workers=args.workers)
     
     args.anchors = train_dataset.anchors
     args.class_list = train_dataset.class_list
@@ -136,8 +139,8 @@ def main():
 
     if args.resume:
         assert args.load_path.is_file(), "Not exist trained weights in the directory path !"
-        
-        ckpt = torch.load(args.load_path, map_location='cpu')
+
+        ckpt = torch.load(args.load_path, map_location="cpu")
         start_epoch = ckpt["running_epoch"]
         model.load_state_dict(ckpt["model_state"], strict=True)
         optimizer.load_state_dict(ckpt["optimizer_state"])
@@ -149,7 +152,7 @@ def main():
     else:
         start_epoch = 1
         logger.info(f"[Arguments]\n{pprint.pformat(vars(args))}\n")
-        logger.info(f"YOLOv1 Architecture Info - Params(M): {params/1e+6:.2f}, FLOPS(B): {2*macs/1E+9:.2f}")
+        logger.info(f"YOLOv2 Architecture Info - Params(M): {params/1e+6:.2f}, FLOPS(B): {2*macs/1E+9:.2f}")
 
     progress_bar = trange(start_epoch, args.num_epochs, total=args.num_epochs, initial=start_epoch, ncols=115)
     best_epoch, best_score, best_mAP_str, mAP_dict = 0, 0, "", None
@@ -168,7 +171,7 @@ def main():
 
         if epoch % 10 == 0:
             val_loader = tqdm(val_loader, desc=f"[VAL:{epoch:03d}/{args.num_epochs:03d}]", ncols=115, leave=False)
-            mAP_dict, eval_text = validate(args=args, dataloader=val_loader, model=model, evaluator=evaluator, epoch=epoch)
+            mAP_dict, eval_text = validate(args=args, dataloader=val_loader, model=model, evaluator=evaluator, epoch=epoch, save_result=True)
             ap50 = mAP_dict["all"]["mAP_50"]
 
             if ap50 > best_score:
@@ -176,7 +179,6 @@ def main():
                 result_analyis(args=args, mAP_dict=mAP_dict["all"])
                 best_epoch, best_score, best_mAP_str = epoch, ap50, eval_text
                 torch.save(save_opt, args.weight_dir / "best.pt")
-
         torch.save(save_opt, args.weight_dir / "last.pt")
         scheduler.step()
 

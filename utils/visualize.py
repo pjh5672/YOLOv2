@@ -195,4 +195,3 @@ def visualize_box_hist(boxes):
     joint_fig.fig.suptitle("Instance Bounding Box Histogram", fontsize=15)
     joint_fig.fig.tight_layout()
     return data_df, joint_fig
-
