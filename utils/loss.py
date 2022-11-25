@@ -59,7 +59,7 @@ class YoloLoss():
         cls_loss = cls_loss.sum() / self.bs
 
         multipart_loss = self.lambda_obj * obj_loss + noobj_loss + (txty_loss + twth_loss) + cls_loss
-        return multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss
+        return [multipart_loss, obj_loss, noobj_loss, txty_loss, twth_loss, cls_loss]
 
 
     def set_grid_xy(self, input_size):

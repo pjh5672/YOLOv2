@@ -10,6 +10,7 @@ from datetime import datetime
 from collections import defaultdict
 
 import torch
+import numpy as np
 from tqdm import tqdm, trange
 from thop import profile
 from torch import nn
@@ -41,22 +42,27 @@ def train(args, dataloader, model, criterion, optimizer):
     for i, minibatch in enumerate(dataloader):
         ni = i + len(dataloader) * (epoch - 1)
         if ni <= args.nw:
+            args.grad_accumulate = max(1, np.interp(ni, [0, args.nw], [1, args.acc_batch_size / args.batch_size]).round())
             set_lr(optimizer, args.base_lr * pow(ni / (args.nw), 4))
 
         images, labels = minibatch[1], minibatch[2]
         
-        if args.multi_scale:
+        if args.multiscale:
             if ni % 10 == 0 and ni > 0:
                 args.train_size = random.randint(10, 19) * 32
                 model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
+
             images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
 
         predictions = model(images.cuda(args.rank, non_blocking=True))
         loss = criterion(predictions=predictions, labels=labels)
-        loss[0].backward()
-        optimizer.step()
-        optimizer.zero_grad()
+        (loss[0]/args.grad_accumulate).backward()
+
+        if ni - args.last_opt_step >= args.grad_accumulate:
+            optimizer.step()
+            optimizer.zero_grad()
+            args.last_opt_step = ni
     
         for loss_name, loss_value in zip(loss_type, loss):
             if not torch.isfinite(loss_value) and loss_name != 'multipart':
@@ -76,10 +82,11 @@ def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp", type=str, required=True, help="Name to log training")
     parser.add_argument("--resume", type=str, nargs='?', const=True ,help="Name to resume path")
-    parser.add_argument('--multi_scale', action='store_true', help='Multi-scale training')
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
+    parser.add_argument('--multiscale', action='store_true', help='Multi-scale training')
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
+    parser.add_argument("--acc_batch_size", type=int, default=64, help="Batch size for gradient accumulation")
     parser.add_argument("--num_epochs", type=int, default=200, help="Number of training epochs")
     parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
     parser.add_argument("--warmup", type=int, default=1, help="Epochs for warming up training")
@@ -110,8 +117,7 @@ def main():
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / "train.log", set_level=1)
 
-    args.train_size = 640 if args.multi_scale else args.img_size
-
+    args.train_size = 640 if args.multiscale else args.img_size
     train_dataset = Dataset(yaml_path=args.data, phase="train")
     train_transformer = AugmentTransform(input_size=args.train_size)
     train_dataset.load_transformer(transformer=train_transformer)
@@ -128,6 +134,8 @@ def main():
     args.color_list = generate_random_color(len(args.class_list))
     args.nw = max(round(args.warmup * len(train_loader)), 100)
     args.mAP_file_path = val_dataset.mAP_file_path
+    args.grad_accumulate = max(round(args.acc_batch_size / args.batch_size), 1)
+    args.last_opt_step = -1
 
     model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
