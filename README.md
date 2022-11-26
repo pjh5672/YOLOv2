@@ -15,7 +15,7 @@
 
 ## [Description]
 
-This is a repository for PyTorch implementation of YOLOv2 following the original paper (https://arxiv.org/abs/1612.08242). By applying the multi-scale training technique, I found that mAP drops by about 2 points. Instead, It shows that there is reasonable compensation in terms of not having to retrain each time for various input resolutions.
+This is a repository for PyTorch implementation of YOLOv2 following the original paper (https://arxiv.org/abs/1612.08242).  By applying the multi-scale training technique, I found that mAP drops by about 2 points. Instead, It shows that there is reasonable compensation in terms of not having to retrain each time for various input resolutions.
 
 
  - **Performance Table**
