@@ -21,9 +21,15 @@ This is a repository for PyTorch implementation of YOLOv2 following the original
 
 | Model | Dataset | Train | Valid | Size<br><sup>(pixel) | mAP<br><sup>(@0.5:0.95) | mAP<br><sup>(@0.5) | Params<br><sup>(M) | FLOPS<br><sup>(B) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
-| YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.00 | 76.8 | *not reported* | 34.90 |
+| YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.0 | 76.8 | *not reported* | 34.90 |
 | YOLOv2-416<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.5 | 75.2 | 50.67 | 29.49 |
-| YOLOv2-multi scale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | - | - | 50.67 | 29.49 |
+| YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 44.4 | 73.4 | 50.67 | 29.49 |
+
+ - **Pretrained Model Download**
+
+	- [YOLOv2-416 (AP@0.50 - 75.2)](https://drive.google.com/file/d/1Ru1oX2R5iJRnuh89rfHVIUAnTL3xtcpK/view?usp=share_link)
+	- [YOLOv2-multiscale (AP@0.50 - 73.4)](https://drive.google.com/file/d/1oQG8TZvOrcVdh_RW22H4MjFFPF144Xre/view?usp=share_link)
+
 
 
 <div align="center">
