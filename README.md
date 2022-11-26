@@ -27,6 +27,7 @@ This is a repository for PyTorch implementation of YOLOv2 following the original
 
  - **Pretrained Model Download**
 
+	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1VqhPnPW-YK62vO5UMxT8l6-f1vxnJnss/view?usp=share_link)
 	- [YOLOv2-416 (AP@0.50 - 75.2)](https://drive.google.com/file/d/1Ru1oX2R5iJRnuh89rfHVIUAnTL3xtcpK/view?usp=share_link)
 	- [YOLOv2-multiscale (AP@0.50 - 73.4)](https://drive.google.com/file/d/1oQG8TZvOrcVdh_RW22H4MjFFPF144Xre/view?usp=share_link)
 
