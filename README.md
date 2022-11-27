@@ -24,14 +24,14 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 | Model | Dataset | Train | Valid | Size<br><sup>(pixel) | mAP<br><sup>(@0.5:0.95) | mAP<br><sup>(@0.5) | Params<br><sup>(M) | FLOPS<br><sup>(B) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
 | YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.0 | 76.8 | *not reported* | 34.90 |
-| YOLOv2-416<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 46.7 | 73.8 | 50.67 | 29.49 |
+| YOLOv2-416<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.1 | 75.3 | 50.67 | 29.49 |
 | YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 44.4 | 73.4 | 50.67 | 29.49 |
 
 
  - **Pretrained Model Download**
 
 	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1VqhPnPW-YK62vO5UMxT8l6-f1vxnJnss/view?usp=share_link)
-	- [YOLOv2-416 (AP@0.50 - 73.8)](https://drive.google.com/file/d/1_KJh-hCnYD7j9W_lcPWmbSm0DBzgwPrH/view?usp=share_link)
+	- [YOLOv2-416 (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
 	- [YOLOv2-multiscale (AP@0.50 - 73.4)](https://drive.google.com/file/d/1oQG8TZvOrcVdh_RW22H4MjFFPF144Xre/view?usp=share_link)
 
 
@@ -98,32 +98,42 @@ python val.py --exp_name my_test --data voc.yaml --ckpt_name best.pt
 
 
 ```log
-2022-11-16 13:45:37 | YOLOv2 Architecture Info - Params(M): 50.67, FLOPS(B): 29.49
-2022-11-16 13:48:09 | [Train-Epoch:001] multipart: 308.6470  obj: 1.8051  noobj: 380.8712  txty: 0.8276  twth: 20.2762  cls: 10.8872  
-2022-11-09 18:01:53 | 
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.121
-	 - Average Precision (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.336
-	 - Average Precision (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.054
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.003
-	 - Average Precision (AP) @[ IoU=0.50      | area= small | maxDets=100 ] = 0.011
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.039
-	 - Average Precision (AP) @[ IoU=0.50      | area=medium | maxDets=100 ] = 0.131
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.154
-	 - Average Precision (AP) @[ IoU=0.50      | area= large | maxDets=100 ] = 0.405
+2022-11-24 00:05:50 | YOLOv2 Architecture Info - Params(M): 50.67, FLOPS(B): 29.49
+2022-11-24 00:11:46 | [Train-Epoch:001] multipart: 47.5865  obj: 0.3412  noobj: 39.8344  txty: 0.3336  twth: 1.3665  cls: 4.3459  
+2022-11-24 00:16:35 | [Train-Epoch:002] multipart: 5.2848  obj: 0.4527  noobj: 0.4779  txty: 0.2533  twth: 0.5172  cls: 1.7730  
+2022-11-24 00:21:20 | [Train-Epoch:003] multipart: 4.7149  obj: 0.4151  noobj: 0.6242  txty: 0.2230  twth: 0.3704  cls: 1.4219  
+2022-11-24 00:25:57 | [Train-Epoch:004] multipart: 4.4068  obj: 0.3878  noobj: 0.6716  txty: 0.2124  twth: 0.3370  cls: 1.2465  
+2022-11-24 00:30:33 | [Train-Epoch:005] multipart: 4.2239  obj: 0.3716  noobj: 0.6863  txty: 0.2042  twth: 0.3206  cls: 1.1549  
+2022-11-24 00:35:08 | [Train-Epoch:006] multipart: 4.0749  obj: 0.3551  noobj: 0.6898  txty: 0.1996  twth: 0.3054  cls: 1.1047  
+2022-11-24 00:39:49 | [Train-Epoch:007] multipart: 3.9681  obj: 0.3493  noobj: 0.6986  txty: 0.1950  twth: 0.2917  cls: 1.0364  
+2022-11-24 00:44:25 | [Train-Epoch:008] multipart: 3.9203  obj: 0.3470  noobj: 0.7098  txty: 0.1907  twth: 0.2743  cls: 1.0106  
+2022-11-24 00:49:01 | [Train-Epoch:009] multipart: 3.7825  obj: 0.3335  noobj: 0.7053  txty: 0.1868  twth: 0.2739  cls: 0.9491  
+2022-11-24 00:53:37 | [Train-Epoch:010] multipart: 3.7485  obj: 0.3315  noobj: 0.7096  txty: 0.1834  twth: 0.2738  cls: 0.9241  
+2022-11-24 00:54:57 | 
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.298
+	 - Average Precision (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.589
+	 - Average Precision (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.250
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.009
+	 - Average Precision (AP) @[ IoU=0.50      | area= small | maxDets=100 ] = 0.042
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.114
+	 - Average Precision (AP) @[ IoU=0.50      | area=medium | maxDets=100 ] = 0.279
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.361
+	 - Average Precision (AP) @[ IoU=0.50      | area= large | maxDets=100 ] = 0.681
 
                                                 ...
 
-2022-11-09 22:59:17 | [Train-Epoch:135] multipart: 1.6719  obj: 0.3912  noobj: 0.3355  box: 0.1720  cls: 0.2530  
-2022-11-09 22:59:40 | 
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.329
-	 - Average Precision (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.605
-	 - Average Precision (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.292
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.009
-	 - Average Precision (AP) @[ IoU=0.50      | area= small | maxDets=100 ] = 0.036
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.113
-	 - Average Precision (AP) @[ IoU=0.50      | area=medium | maxDets=100 ] = 0.293
-	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.399
-	 - Average Precision (AP) @[ IoU=0.50      | area= large | maxDets=100 ] = 0.688
+2022-11-24 16:37:12 | [Train-Epoch:199] multipart: 1.8789  obj: 0.1728  noobj: 0.5847  txty: 0.1090  twth: 0.1221  cls: 0.1992  
+2022-11-24 16:37:13 | [Best mAP at 190]
+
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.481
+	 - Average Precision (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.753
+	 - Average Precision (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.501
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.061
+	 - Average Precision (AP) @[ IoU=0.50      | area= small | maxDets=100 ] = 0.174
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.230
+	 - Average Precision (AP) @[ IoU=0.50      | area=medium | maxDets=100 ] = 0.460
+	 - Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.552
+	 - Average Precision (AP) @[ IoU=0.50      | area= large | maxDets=100 ] = 0.807
 ```
 
 
