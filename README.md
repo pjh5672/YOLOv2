@@ -31,7 +31,7 @@ By applying the multi-scale training technique, I found that mAP drops by about 
  - **Pretrained Model Download**
 
 	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1VqhPnPW-YK62vO5UMxT8l6-f1vxnJnss/view?usp=share_link)
-	- [YOLOv2-416 (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
+	- [YOLOv2 (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
 	- [YOLOv2-multiscale (AP@0.50 - 73.4)](https://drive.google.com/file/d/1oQG8TZvOrcVdh_RW22H4MjFFPF144Xre/view?usp=share_link)
 
 
