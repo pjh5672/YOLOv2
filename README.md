@@ -35,12 +35,8 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 	- [YOLOv2-multiscale (AP@0.50 - 74.1)](https://drive.google.com/file/d/1vFbmQXoGNNqNq79K4nuhSSbNHHph81e_/view?usp=share_link)
 
 
+![result](./asset/result.jpg)
 
-<div align="center">
-
-  <a href=""><img src=./asset/EP_150.jpg width="100%" />
-
-</div>
 
 
 ## [Usage]
