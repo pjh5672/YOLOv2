@@ -16,7 +16,7 @@
 ## [Description]
 
 This is a repository for PyTorch implementation of YOLOv2 following the original paper (https://arxiv.org/abs/1612.08242).   
-By applying the multi-scale training technique, I found that mAP drops by about 2 points. Instead, It shows that there is reasonable compensation in terms of not having to retrain each time for various input resolutions.
+By applying the multi-scale training technique, I found that mAP drops by about 1 points. Instead, It shows that there is reasonable compensation in terms of not having to retrain each time for various input resolutions.
 
 
  - **Performance Table**
@@ -25,14 +25,14 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
 | YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.0 | 76.8 | *not reported* | 34.90 |
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.1 | 75.3 | 50.67 | 29.49 |
-| YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 320~608 | 44.4 | 73.4 | 50.67 | 29.49 |
+| YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 320~608 | 45.1 | 74.1 | 50.67 | 29.49 |
 
 
  - **Pretrained Model Download**
 
 	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1VqhPnPW-YK62vO5UMxT8l6-f1vxnJnss/view?usp=share_link)
 	- [YOLOv2 (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
-	- [YOLOv2-multiscale (AP@0.50 - 73.4)](https://drive.google.com/file/d/1oQG8TZvOrcVdh_RW22H4MjFFPF144Xre/view?usp=share_link)
+	- [YOLOv2-multiscale (AP@0.50 - 74.1)](https://drive.google.com/file/d/1vFbmQXoGNNqNq79K4nuhSSbNHHph81e_/view?usp=share_link)
 
 
 

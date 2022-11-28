@@ -117,7 +117,7 @@ def main():
     args = parse_args(make_dirs=True)
     logger = build_basic_logger(args.exp_path / "train.log", set_level=1)
 
-    args.train_size = 640 if args.multiscale else args.img_size
+    args.train_size = 608 if args.multiscale else args.img_size
     train_dataset = Dataset(yaml_path=args.data, phase="train")
     train_transformer = AugmentTransform(input_size=args.train_size)
     train_dataset.load_transformer(transformer=train_transformer)
