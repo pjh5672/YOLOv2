@@ -26,7 +26,7 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 | YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.0 | 76.8 | *not reported* | 34.90 |
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.1 | 75.3 | 50.67 | 29.49 |
 | YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 320~608 | 45.1 | 74.1 | 50.67 | 29.49 |
-| YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | COCO | train2017 | val2017 | 416 | 26.7 | 45.5 | 50.67 | 29.49 |
+| YOLOv2<br><sup>(<u>Our:star:</u>)</br> | COCO | train2017 | val2017 | 416 | 26.7 | 45.5 | 50.67 | 29.49 |
 
 
  - **Pretrained Model Download**
