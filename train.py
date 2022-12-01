@@ -65,7 +65,7 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
         if args.multiscale:
             if ni % 10 == 0 and ni > 0:
                 args.train_size = random.randint(10, 19) * 32
-                model.set_grid_xy(input_size=args.train_size)
+                model.module.set_grid_xy(input_size=args.train_size) if hasattr(model, "module") else model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
 
             images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
