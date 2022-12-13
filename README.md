@@ -29,7 +29,7 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | COCO | train2017 | val2017 | 416 | 26.7 | 45.5 | 50.67 | 29.49 |
 
 
- - **Pretrained Model Download**
+ - **Pretrained Model Weights Download**
 
 	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1rRHFXzqTtCyP69f4ygjA-qrjSVf2tBPv/view?usp=share_link)
 	- [YOLOv2 trained on VOC (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
