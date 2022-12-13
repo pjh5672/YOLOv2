@@ -24,7 +24,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 ROOT = Path(__file__).resolve().parents[0]
 OS_SYSTEM = platform.system()
-TIMESTAMP = datetime.today().strftime('%Y-%m-%d_%H-%M')
+TIMESTAMP = datetime.today().strftime("%Y-%m-%d_%H-%M")
 cudnn.benchmark = True
 SEED = 2023
 random.seed(SEED)
@@ -67,7 +67,7 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
                 args.train_size = random.randint(10, 19) * 32
                 model.module.set_grid_xy(input_size=args.train_size) if hasattr(model, "module") else model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
-            images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
+            images = nn.functional.interpolate(images, size=args.train_size, mode="bilinear")
 
         with amp.autocast(enabled=not args.no_amp):
             predictions = model(images.cuda(args.rank, non_blocking=True))
@@ -82,8 +82,8 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
             args.last_opt_step = ni
     
         for loss_name, loss_value in zip(loss_type, loss):
-            if not torch.isfinite(loss_value) and loss_name != 'multipart':
-                print(f'############## {loss_name} Loss is Nan/Inf ! {loss_value} ##############')
+            if not torch.isfinite(loss_value) and loss_name != "multipart":
+                print(f"############## {loss_name} Loss is Nan/Inf ! {loss_value} ##############")
                 sys.exit(0)
             else:
                 losses[loss_name] += loss_value.item()
@@ -106,7 +106,7 @@ def parse_args(make_dirs=True):
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--acc_batch_size", type=int, default=64, help="Batch size for gradient accumulation")
     parser.add_argument("--num_epochs", type=int, default=200, help="Number of training epochs")
-    parser.add_argument('--lr_decay', nargs='+', default=[100, 150], type=int, help='Epoch to learning rate decay')
+    parser.add_argument("--lr_decay", nargs="+", default=[100, 150], type=int, help="Epoch to learning rate decay")
     parser.add_argument("--warmup", type=int, default=1, help="Epochs for warming up training")
     parser.add_argument("--base_lr", type=float, default=0.001, help="Base learning rate")
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum")
@@ -119,7 +119,7 @@ def parse_args(make_dirs=True):
     parser.add_argument("--world_size", type=int, default=1, help="Number of available GPU devices")
     parser.add_argument("--rank", type=int, default=0, help="Process id for computation")
     parser.add_argument("--no_amp", action="store_true", help="Use of FP32 training (default: AMP training)")
-    parser.add_argument('--multiscale', action='store_true', help='Multi-scale training')
+    parser.add_argument("--multiscale", action="store_true", help="Multi-scale training")
     parser.add_argument("--depthwise", action="store_true", help="Use of Depth-separable conv operation")
     parser.add_argument("--scratch", action="store_true", help="Scratch training without pretrained weights")
     parser.add_argument("--resume", action="store_true", help="Name to resume path")
@@ -144,7 +144,7 @@ def main_work(rank, world_size, args, logger):
     torch.manual_seed(SEED)
     torch.cuda.set_device(rank)
 
-    if OS_SYSTEM == 'Linux':
+    if OS_SYSTEM == "Linux":
         import logging
         setup_worker_logging(rank, logger)
     else:
@@ -207,7 +207,7 @@ def main_work(rank, world_size, args, logger):
                 if isinstance(v, torch.Tensor):
                     state[k] = v.cuda(args.rank)
         scheduler.load_state_dict(ckpt["scheduler_state"])
-        scaler.load_state_dict(ckpt['scaler_state_dict'])
+        scaler.load_state_dict(ckpt["scaler_state_dict"])
     else:
         start_epoch = 1
         if args.rank == 0:
@@ -236,7 +236,7 @@ def main_work(rank, world_size, args, logger):
                         "model_state": deepcopy(model.module).state_dict() if hasattr(model, "module") else deepcopy(model).state_dict(),
                         "optimizer_state": optimizer.state_dict(),
                         "scheduler_state": scheduler.state_dict(),
-                        'scaler_state_dict': scaler.state_dict()}
+                        "scaler_state_dict": scaler.state_dict()}
             torch.save(save_opt, args.weight_dir / "last.pt")
 
             if epoch % 10 == 0:

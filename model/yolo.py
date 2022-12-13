@@ -83,7 +83,7 @@ if __name__ == "__main__":
     input_size = 416
     num_classes = 1
     inp = torch.randn(2, 3, input_size, input_size)
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     anchors = [[0.47070834, 0.7668643 ],
                [0.6636637,  0.274     ],
