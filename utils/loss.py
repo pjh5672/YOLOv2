@@ -12,14 +12,15 @@ from utils import set_grid
 
 
 class YoloLoss():
-    def __init__(self, input_size, anchors):
+    def __init__(self, input_size, anchors, label_smoothing=0.0):
+        self.stride = 32
         self.num_boxes = 5
         self.lambda_obj = 5.0
         self.iou_threshold = 0.5
         self.num_attributes = 1 + 4 + 1
         self.obj_loss_func = nn.MSELoss(reduction='none')
         self.box_loss_func = nn.MSELoss(reduction='none')
-        self.cls_loss_func = nn.CrossEntropyLoss(reduction='none')
+        self.cls_loss_func = nn.CrossEntropyLoss(reduction='none', label_smoothing=label_smoothing)
         self.anchors = anchors
         self.set_grid_xy(input_size=input_size)
 
@@ -63,8 +64,7 @@ class YoloLoss():
 
 
     def set_grid_xy(self, input_size):
-        stride = 32
-        self.grid_size = input_size // stride
+        self.grid_size = input_size // self.stride
         grid_x, grid_y = set_grid(grid_size=self.grid_size)
         self.grid_x = grid_x.contiguous().view((1, -1, 1))
         self.grid_y = grid_y.contiguous().view((1, -1, 1))

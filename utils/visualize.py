@@ -49,7 +49,7 @@ def visualize(image, label, class_list, color_list, show_class=False, show_score
     canvas = image.copy()
     for item in label:
         canvas = visualize_box(canvas, item, class_list, color_list, show_class=show_class, show_score=show_score)
-    return canvas
+    return canvas[..., ::-1]
 
 
 def visualize_target(image, label, class_list, color_list):
@@ -186,12 +186,3 @@ def visualize_class_dist(class_ids, class_list, rotation=60):
     fig = ax.get_figure()
     fig.tight_layout()
     return fig
-
-
-def visualize_box_hist(boxes):
-    data_df = pd.DataFrame(boxes, columns = ['box_w','box_h','cluster_id'])
-    joint_fig = sns.jointplot(data=data_df, x="box_w", y="box_h", hue="cluster_id", kind='scatter', ratio=3)
-    joint_fig.set_axis_labels(xlabel="Instance Width", ylabel="Instance Height")
-    joint_fig.fig.suptitle("Instance Bounding Box Histogram", fontsize=15)
-    joint_fig.fig.tight_layout()
-    return data_df, joint_fig

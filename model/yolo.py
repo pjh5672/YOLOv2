@@ -17,17 +17,26 @@ from utils import set_grid
 
 
 class YoloModel(nn.Module):
-    def __init__(self, input_size, num_classes, anchors):
+    def __init__(self, input_size, num_classes, anchors, pretrained=False, depthwise=False):
         super().__init__()
+        self.stride = 32
         self.num_boxes = 5
         self.input_size = input_size
         self.num_classes = num_classes
         self.num_attributes = 1 + 4 + num_classes
-        self.backbone, feat_dims = build_backbone(pretrained=True)
-        self.neck = PassthroughLayer(in_channels=feat_dims, stride=2)
-        self.head = YoloHead(in_channels=self.neck.feat_dims[0]*4+self.neck.feat_dims[1], out_channels=self.num_attributes*self.num_boxes)
+        self.backbone, feat_dims = build_backbone(depthwise=depthwise)
+        self.neck = PassthroughLayer(in_channels=feat_dims, depthwise=depthwise)
+        self.head = YoloHead(in_channels=self.neck.feat_dims[0]*4+self.neck.feat_dims[1], 
+                             out_channels=self.num_attributes*self.num_boxes, depthwise=depthwise)
         self.anchors = torch.tensor(anchors)
         self.set_grid_xy(input_size=input_size)
+
+        if pretrained:
+            if depthwise:
+                ckpt = torch.load(ROOT / "weights" / "yolov2_depthwise.pt", map_location="cpu")
+            else:
+                ckpt = torch.load(ROOT / "weights" / "yolov2.pt", map_location="cpu")
+            self.load_state_dict(ckpt["model_state"], strict=False)
 
 
     def forward(self, x):
@@ -63,8 +72,7 @@ class YoloModel(nn.Module):
 
 
     def set_grid_xy(self, input_size):
-        stride = 32
-        self.grid_size = input_size // stride
+        self.grid_size = input_size // self.stride
         grid_x, grid_y = set_grid(grid_size=self.grid_size)
         self.grid_x = grid_x.contiguous().view((1, -1, 1))
         self.grid_y = grid_y.contiguous().view((1, -1, 1))
@@ -83,7 +91,7 @@ if __name__ == "__main__":
                [0.8605263,  0.8736842 ],
                [0.283375,   0.5775    ]]
 
-    model = YoloModel(input_size=input_size, num_classes=num_classes, anchors=anchors).to(device)
+    model = YoloModel(input_size=input_size, num_classes=num_classes, anchors=anchors, depthwise=False).to(device)
     model.train()
     out = model(inp.to(device))
     print(model.grid_size)

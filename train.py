@@ -37,19 +37,19 @@ from val import validate, result_analyis
 
 
 def setup(rank, world_size):
-    if OS_SYSTEM == 'Linux':
-        os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = '12345'
-        dist.init_process_group('nccl', rank=rank, world_size=world_size)
+    if OS_SYSTEM == "Linux":
+        os.environ["MASTER_ADDR"] = "localhost"
+        os.environ["MASTER_PORT"] = "12345"
+        dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
 
 def cleanup():
-    if OS_SYSTEM == 'Linux':
+    if OS_SYSTEM == "Linux":
         dist.destroy_process_group()
 
 
 def train(args, dataloader, model, criterion, optimizer, scaler):
-    loss_type = ['multipart', 'obj', 'noobj', 'txty', 'twth', 'cls']
+    loss_type = ["multipart", "obj", "noobj", "txty", "twth", "cls"]
     losses = defaultdict(float)
     model.train()
     optimizer.zero_grad()
@@ -67,7 +67,6 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
                 args.train_size = random.randint(10, 19) * 32
                 model.module.set_grid_xy(input_size=args.train_size) if hasattr(model, "module") else model.set_grid_xy(input_size=args.train_size)
                 criterion.set_grid_xy(input_size=args.train_size)
-
             images = nn.functional.interpolate(images, size=args.train_size, mode='bilinear')
 
         with amp.autocast(enabled=not args.no_amp):
@@ -89,6 +88,9 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
             else:
                 losses[loss_name] += loss_value.item()
 
+    del images, predictions
+    torch.cuda.empty_cache()
+
     loss_str = f"[Train-Epoch:{epoch:03d}] "
     for loss_name in loss_type:
         losses[loss_name] /= len(dataloader)
@@ -99,9 +101,7 @@ def train(args, dataloader, model, criterion, optimizer, scaler):
 def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp", type=str, required=True, help="Name to log training")
-    parser.add_argument("--resume", type=str, nargs='?', const=True ,help="Name to resume path")
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
-    parser.add_argument('--multiscale', action='store_true', help='Multi-scale training')
     parser.add_argument("--img_size", type=int, default=416, help="Model input size")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--acc_batch_size", type=int, default=64, help="Batch size for gradient accumulation")
@@ -111,6 +111,7 @@ def parse_args(make_dirs=True):
     parser.add_argument("--base_lr", type=float, default=0.001, help="Base learning rate")
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum")
     parser.add_argument("--weight_decay", type=float, default=0.0005, help="Weight decay")
+    parser.add_argument("--label_smoothing", type=float, default=0.1, help="Label smoothing")
     parser.add_argument("--conf_thres", type=float, default=0.001, help="Threshold to filter confidence score")
     parser.add_argument("--nms_thres", type=float, default=0.6, help="Threshold to filter Box IoU of NMS process")
     parser.add_argument("--img_interval", type=int, default=10, help="Interval to log train/val image")
@@ -118,6 +119,10 @@ def parse_args(make_dirs=True):
     parser.add_argument("--world_size", type=int, default=1, help="Number of available GPU devices")
     parser.add_argument("--rank", type=int, default=0, help="Process id for computation")
     parser.add_argument("--no_amp", action="store_true", help="Use of FP32 training (default: AMP training)")
+    parser.add_argument('--multiscale', action='store_true', help='Multi-scale training')
+    parser.add_argument("--depthwise", action="store_true", help="Use of Depth-separable conv operation")
+    parser.add_argument("--scratch", action="store_true", help="Scratch training without pretrained weights")
+    parser.add_argument("--resume", action="store_true", help="Name to resume path")
 
     args = parser.parse_args()
     args.data = ROOT / "data" / args.data
@@ -172,17 +177,17 @@ def main_work(rank, world_size, args, logger):
     args.nw = max(round(args.warmup * len(train_loader)), 100)
     args.mAP_file_path = val_dataset.mAP_file_path
 
-    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors)
+    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=args.anchors, pretrained=not args.scratch, depthwise=args.depthwise)
     macs, params = profile(deepcopy(model), inputs=(torch.randn(1, 3, args.img_size, args.img_size),), verbose=False)
     model.set_grid_xy(input_size=args.train_size)
-    criterion = YoloLoss(input_size=args.train_size, anchors=model.anchors)
+    criterion = YoloLoss(input_size=args.train_size, anchors=model.anchors, label_smoothing=args.label_smoothing)
     optimizer = optim.SGD(model.parameters(), lr=args.base_lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_decay, gamma=0.1)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)
     scaler = amp.GradScaler(enabled=not args.no_amp)
 
     model = model.cuda(args.rank)
-    if OS_SYSTEM == 'Linux':
+    if OS_SYSTEM == "Linux":
         model = DDP(model, device_ids=[args.rank])
         dist.barrier()
     #################################### Load Model #####################################
@@ -211,9 +216,9 @@ def main_work(rank, world_size, args, logger):
     #################################### Train Model ####################################
     
     if args.rank == 0:
-        progress_bar = trange(start_epoch, args.num_epochs, total=args.num_epochs, initial=start_epoch, ncols=115)
+        progress_bar = trange(start_epoch, args.num_epochs+1, total=args.num_epochs, initial=start_epoch, ncols=115)
     else:
-        progress_bar = range(start_epoch, args.num_epochs)
+        progress_bar = range(start_epoch, args.num_epochs+1)
 
     best_epoch, best_score, best_mAP_str, mAP_dict = 0, 0, "", None
 
@@ -226,6 +231,7 @@ def main_work(rank, world_size, args, logger):
         if args.rank == 0:
             logging.warning(train_loss_str) 
             save_opt = {"running_epoch": epoch,
+                        "depthwise": args.depthwise,
                         "class_list": args.class_list,
                         "model_state": deepcopy(model.module).state_dict() if hasattr(model, "module") else deepcopy(model).state_dict(),
                         "optimizer_state": optimizer.state_dict(),
@@ -237,28 +243,27 @@ def main_work(rank, world_size, args, logger):
                 val_loader = tqdm(val_loader, desc=f"[VAL:{epoch:03d}/{args.num_epochs:03d}]", ncols=115, leave=False)
                 mAP_dict, eval_text = validate(args=args, dataloader=val_loader, model=model, evaluator=evaluator, epoch=epoch)
                 ap50 = mAP_dict["all"]["mAP_50"]
-                
+                logging.warning(eval_text)
+
                 if ap50 > best_score:
-                    logging.warning(eval_text)
                     result_analyis(args=args, mAP_dict=mAP_dict["all"])
                     best_epoch, best_score, best_mAP_str = epoch, ap50, eval_text
                     torch.save(save_opt, args.weight_dir / "best.pt")
         scheduler.step()
 
     if mAP_dict and args.rank == 0:
-        logging.warning(f"[Best mAP at {best_epoch}]\n{best_mAP_str}")
-        
+        logging.warning(f"[Best mAP at {best_epoch}]{best_mAP_str}")
+    cleanup()
+
 
 
 if __name__ == "__main__":
     args = parse_args(make_dirs=True)
 
-    if OS_SYSTEM == 'Linux':
-        torch.multiprocessing.set_start_method('spawn', force=True)
-        logger = setup_primary_logging(args.exp_path / 'train.log')
+    if OS_SYSTEM == "Linux":
+        torch.multiprocessing.set_start_method("spawn", force=True)
+        logger = setup_primary_logging(args.exp_path / "train.log")
         mp.spawn(main_work, args=(args.world_size, args, logger), nprocs=args.world_size, join=True)
     else:
         logger = build_basic_logger(args.exp_path / "train.log")
         main_work(rank=0, world_size=1, args=args, logger=logger)
-
-    cleanup()

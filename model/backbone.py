@@ -5,38 +5,38 @@ from torch import nn
 
 from element import Conv
 
-ROOT = Path(__file__).resolve().parents[0]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 
 class Darknet19(nn.Module):
-    def __init__(self):
+    def __init__(self, depthwise=False):
         super().__init__()
-        self.conv1 = Conv(3, 32, kernel_size=3, padding=1)
-        self.conv2 = Conv(32, 64, kernel_size=3, padding=1)
+        self.conv1 = Conv(3, 32, kernel_size=3, padding=1, depthwise=depthwise)
+        self.conv2 = Conv(32, 64, kernel_size=3, padding=1, depthwise=depthwise)
         self.conv3 = nn.Sequential(
-            Conv(64, 128, kernel_size=3, padding=1),
-            Conv(128, 64, kernel_size=1),
-            Conv(64, 128, kernel_size=3, padding=1)
+            Conv(64, 128, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(128, 64, kernel_size=1, depthwise=depthwise),
+            Conv(64, 128, kernel_size=3, padding=1, depthwise=depthwise)
         )
         self.conv4 = nn.Sequential(
-            Conv(128, 256, kernel_size=3, padding=1),
-            Conv(256, 128, kernel_size=1),
-            Conv(128, 256, kernel_size=3, padding=1)
+            Conv(128, 256, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(256, 128, kernel_size=1, depthwise=depthwise),
+            Conv(128, 256, kernel_size=3, padding=1, depthwise=depthwise)
         )
         self.conv5 = nn.Sequential(
-            Conv(256, 512, kernel_size=3, padding=1),
-            Conv(512, 256, kernel_size=1),
-            Conv(256, 512, kernel_size=3, padding=1),
-            Conv(512, 256, kernel_size=1),
-            Conv(256, 512, kernel_size=3, padding=1)
+            Conv(256, 512, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(512, 256, kernel_size=1, depthwise=depthwise),
+            Conv(256, 512, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(512, 256, kernel_size=1, depthwise=depthwise),
+            Conv(256, 512, kernel_size=3, padding=1, depthwise=depthwise)
         )
         self.conv6 = nn.Sequential(
-            Conv(512, 1024, kernel_size=3, padding=1),
-            Conv(1024, 512, kernel_size=1),
-            Conv(512, 1024, kernel_size=3, padding=1),
-            Conv(1024, 512, kernel_size=1),
-            Conv(512, 1024, kernel_size=3, padding=1),
+            Conv(512, 1024, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(1024, 512, kernel_size=1, depthwise=depthwise),
+            Conv(512, 1024, kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(1024, 512, kernel_size=1, depthwise=depthwise),
+            Conv(512, 1024, kernel_size=3, padding=1, depthwise=depthwise),
         )
         self.pool = nn.MaxPool2d(kernel_size=(2,2), stride=2)
 
@@ -50,12 +50,15 @@ class Darknet19(nn.Module):
         return (C4, C5)
 
 
-def build_backbone(pretrained=True):
+def build_backbone(depthwise=False):
     feat_dims = (512, 1024)
-    model = Darknet19()
-    if pretrained:
-        ckpt = torch.load(ROOT / "darknet19.pt")
-        model.load_state_dict(ckpt, strict=True)
+    model = Darknet19(depthwise=depthwise)
+    
+    if depthwise:
+        ckpt = torch.load(ROOT / "weights" / "darknet19_depthwise.pt")
+    else:
+        ckpt = torch.load(ROOT / "weights" / "darknet19.pt")
+    model.load_state_dict(ckpt, strict=False)
     return model, feat_dims
 
 
@@ -63,7 +66,7 @@ def build_backbone(pretrained=True):
 if __name__ == "__main__":
     input_size = 416
     device = torch.device('cpu')
-    backbone, feat_dims = build_backbone(pretrained=True)
+    backbone, feat_dims = build_backbone(depthwise=False)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
     ftrs = backbone(x)
