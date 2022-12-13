@@ -137,7 +137,7 @@ def main():
     args.color_list = generate_random_color(len(args.class_list))
     args.mAP_file_path = val_dataset.mAP_file_path
 
-    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=ckpt["anchors"], depthwise=ckpt["depthwise"])
+    model = YoloModel(input_size=args.img_size, num_classes=len(args.class_list), anchors=ckpt["anchors"])
     model.load_state_dict(ckpt["model_state"], strict=True)
     model = model.cuda(args.rank)
     evaluator = Evaluator(annotation_file=args.mAP_file_path)

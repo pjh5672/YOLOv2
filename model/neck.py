@@ -6,14 +6,14 @@ from element import Conv
 
 
 class PassthroughLayer(nn.Module):
-    def __init__(self, in_channels, depthwise=False):
+    def __init__(self, in_channels):
         super().__init__()
         self.stride = 2
         self.feat_dims = (64, 1024)
-        self.conv1 = Conv(in_channels[0], self.feat_dims[0], kernel_size=1, depthwise=depthwise)
+        self.conv1 = Conv(in_channels[0], self.feat_dims[0], kernel_size=1)
         self.conv2 = nn.Sequential(
-            Conv(in_channels[1], 1024, kernel_size=3, padding=1, depthwise=depthwise),
-            Conv(1024, self.feat_dims[1], kernel_size=3, padding=1, depthwise=depthwise),
+            Conv(in_channels[1], 1024, kernel_size=3, padding=1),
+            Conv(1024, self.feat_dims[1], kernel_size=3, padding=1),
         )
         
 
@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
     input_size = 416
     device = torch.device('cpu')
-    backbone, feat_dims = build_backbone(depthwise=False)
-    neck = PassthroughLayer(in_channels=feat_dims, depthwise=False)
+    backbone, feat_dims = build_backbone()
+    neck = PassthroughLayer(in_channels=feat_dims)
 
     x = torch.randn(1, 3, input_size, input_size).to(device)
     ftrs = backbone(x)
