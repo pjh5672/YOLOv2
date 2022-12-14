@@ -23,18 +23,16 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 
 | Model | Dataset | Train | Valid | Size<br><sup>(pixel) | mAP<br><sup>(@0.5:0.95) | mAP<br><sup>(@0.5) | Params<br><sup>(M) | FLOPS<br><sup>(B) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
-| YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 51.0 | 76.8 | *not reported* | 34.90 |
+| YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | *not reported* | 76.8 | *not reported* | 34.90 |
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 48.1 | 75.3 | 50.67 | 29.49 |
-| YOLOv2-multiscale<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 320~608 | 45.1 | 74.1 | 50.67 | 29.49 |
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | COCO | train2017 | val2017 | 416 | 26.7 | 45.5 | 50.67 | 29.49 |
 
 
  - **Pretrained Model Weights Download**
 
-	- [DarkNet-19 Backbone](https://drive.google.com/file/d/1rRHFXzqTtCyP69f4ygjA-qrjSVf2tBPv/view?usp=share_link)
-	- [YOLOv2 trained on VOC (AP@0.50 - 75.3)](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
-	- [YOLOv2-multiscale trained on VOC (AP@0.50 - 74.1)](https://drive.google.com/file/d/1vFbmQXoGNNqNq79K4nuhSSbNHHph81e_/view?usp=share_link)
-	- [YOLOv2 trained on COCO2017 (AP@0.50:0.95 - 45.5)](https://drive.google.com/file/d/1qorkqX0k92iUK63nUtUweHU5qvtC2kzk/view?usp=share_link)
+	- [DarkNet-19 448x448 Backbone](https://drive.google.com/file/d/1rRHFXzqTtCyP69f4ygjA-qrjSVf2tBPv/view?usp=share_link)
+	- [YOLOv2 trained on VOC](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
+	- [YOLOv2 trained on COCO](https://drive.google.com/file/d/1qorkqX0k92iUK63nUtUweHU5qvtC2kzk/view?usp=share_link)
 
 
 ![result](./asset/result.jpg)

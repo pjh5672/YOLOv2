@@ -10,10 +10,10 @@ class PassthroughLayer(nn.Module):
         super().__init__()
         self.stride = 2
         self.feat_dims = (64, 1024)
-        self.conv1 = Conv(in_channels[0], self.feat_dims[0], kernel_size=1)
+        self.conv1 = Conv(in_channels[0], self.feat_dims[0], kernel_size=1, act="leaky_relu")
         self.conv2 = nn.Sequential(
-            Conv(in_channels[1], 1024, kernel_size=3, padding=1),
-            Conv(1024, self.feat_dims[1], kernel_size=3, padding=1),
+            Conv(in_channels[1], 1024, kernel_size=3, padding=1, act="leaky_relu"),
+            Conv(1024, self.feat_dims[1], kernel_size=3, padding=1, act="leaky_relu"),
         )
         
 
