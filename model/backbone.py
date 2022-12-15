@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 
-class Darknet19(nn.Module):
+class DarkNet19(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = Conv(3, 32, kernel_size=3, padding=1, act="leaky_relu")
@@ -38,7 +38,7 @@ class Darknet19(nn.Module):
             Conv(1024, 512, kernel_size=1, act="leaky_relu"),
             Conv(512, 1024, kernel_size=3, padding=1, act="leaky_relu"),
         )
-        self.pool = nn.MaxPool2d(kernel_size=(2,2), stride=2)
+        self.pool = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
 
 
     def forward(self, x):
@@ -52,7 +52,7 @@ class Darknet19(nn.Module):
 
 def build_backbone():
     feat_dims = (512, 1024)
-    model = Darknet19()
+    model = DarkNet19()
     ckpt = torch.load(ROOT / "weights" / "darknet19.pt")
     model.load_state_dict(ckpt["model_state"], strict=False)
     return model, feat_dims
