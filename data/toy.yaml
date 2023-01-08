@@ -5,7 +5,7 @@ TRAIN:
 VAL: 
  - images/train_2
 
-MAP_FILE_NAME: toy_dataset_val.json
+VAL_FILE: toy_dataset-val.json
 
 ANCHORS:
    [[0.47070834, 0.7668643 ],

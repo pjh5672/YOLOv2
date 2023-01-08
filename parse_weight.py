@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[0]
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp", type=str, required=True, help="Name to log training")
-    parser.add_argument("--ckpt_name", type=str, default="best.pt", help="Path to trained model")
+    parser.add_argument("--ckpt-name", type=str, default="best.pt", help="Path to trained model")
 
     args = parser.parse_args()
     args.exp_path = ROOT / "experiment" / args.exp
@@ -29,5 +29,5 @@ if __name__ == "__main__":
         if not key.startswith("head"):
             parsed_model_state[key] = val
     
-    torch.save({"model_state": parsed_model_state}, f"./{args.exp}.pt")
+    torch.save({"model_state": parsed_model_state}, f"./yolov2-{args.exp}.pt")
     

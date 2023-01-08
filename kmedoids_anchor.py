@@ -73,9 +73,10 @@ def kmedoids_iou(boxes_wh, n_cluster):
 def parse_args(make_dirs=True):
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp", type=str, required=True, help="Name to log training")
-    parser.add_argument("--apply_img", type=str, nargs='?', const=True ,help="Clustering box dimensions with original image size")
     parser.add_argument("--data", type=str, default="toy.yaml", help="Path to data.yaml")
-    parser.add_argument("--n_cluster", type=int, default=5, help="Number of clusters")
+    parser.add_argument("--n-cluster", type=int, default=5, help="Number of clusters")
+    parser.add_argument("--apply-img", action="store_true", help="Clustering box dimensions with original image size")
+
     args = parser.parse_args()
     args.data = ROOT / "data" / args.data
     args.exp_path = ROOT / 'experiment' / args.exp

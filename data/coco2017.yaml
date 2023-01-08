@@ -1,11 +1,11 @@
-PATH: d:/DATASET/MS-COCO/coco2017
+PATH: /media/jhpark/STORE/DATASET/MS-COCO/coco2017
 
 TRAIN: 
  - images/train
 VAL: 
  - images/val
 
-MAP_FILE_NAME: coco2017_val.json
+VAL_FILE: coco2017-val.json
 
 ANCHORS:
   [[0.202359,  0.311667 ],
