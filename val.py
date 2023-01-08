@@ -30,7 +30,7 @@ def validate(args, dataloader, model, evaluator, epoch=0, save_result=False):
     model.eval()
     model.module.set_grid_xy(input_size=args.img_size) if hasattr(model, "module") else model.set_grid_xy(input_size=args.img_size)
     
-    with open(args.mAP_file_path, mode="r") as f:
+    with open(args.mAP_filepath, mode="r") as f:
         mAP_json = json.load(f)
 
     cocoPred = []
