@@ -30,7 +30,7 @@ By applying the multi-scale training technique, I found that mAP drops by about 
 
  - **Pretrained Model Weights Download**
 
-	- [DarkNet19 backbone](https://drive.google.com/file/d/1VA4Lc5MUFzL_WQ2-HVQMkH6sLF44fWsj/view?usp=share_link)
+	- [Darknet19 backbone](https://drive.google.com/file/d/1qjOfb-KESJFZoJRlwZ_2FbT4-9PkgdjZ/view?usp=share_link)
 	- [YOLOv2 trained on VOC](https://drive.google.com/file/d/16TZ6BAaoGo9kRPIcXroWzngb7ZU_tt0L/view?usp=share_link)
 	- [YOLOv2 trained on COCO](https://drive.google.com/file/d/1qorkqX0k92iUK63nUtUweHU5qvtC2kzk/view?usp=share_link)
 
@@ -79,7 +79,7 @@ python train.py --exp my_test --data voc.yaml
  - You can compute detection metric via mean Average Precision(mAP) with IoU of 0.5, 0.75, 0.5:0.95. I follow the evaluation code with the reference on https://github.com/rafaelpadilla/Object-Detection-Metrics.
 
 ```python
-python val.py --exp my_test --data voc.yaml --ckpt_name best.pt
+python val.py --exp my_test --data voc.yaml --ckpt-name best.pt
 ```
 
 
