@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 model_urls = {
-    "darknet19-448": "https://drive.google.com/file/d/1PvEYIms_iU8VSvtmQ9D_MHhJuULA45l4/view?usp=share_link"
+    "darknet19-448": "https://drive.google.com/file/d/1qjOfb-KESJFZoJRlwZ_2FbT4-9PkgdjZ/view?usp=share_link"
 }
 
 
