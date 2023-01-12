@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+import gdown
 import torch
 from torch import nn
 
@@ -14,6 +15,10 @@ if str(ROOT) not in sys.path:
 
 from utils import set_grid
 
+
+model_urls = {
+    "yolov2": "https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=share_link",
+}
 
 
 class YoloModel(nn.Module):
@@ -32,7 +37,10 @@ class YoloModel(nn.Module):
         self.set_grid_xy(input_size=input_size)
 
         if pretrained:
-            ckpt = torch.load(ROOT / "weights" / "yolov2.pt", map_location="cpu")
+            download_path = ROOT / "weights" / "yolov2.pt"
+            if not download_path.is_file():
+                gdown.download(model_urls[f"yolov2"], str(download_path), quiet=False, fuzzy=True)
+            ckpt = torch.load(download_path, map_location="cpu")
             self.load_state_dict(ckpt["model_state"], strict=False)
 
 
