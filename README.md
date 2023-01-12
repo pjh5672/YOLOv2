@@ -70,7 +70,7 @@ python kmedoids_anchor.py --exp my_test --data voc.yaml
  - You can train your own YOLOv2 model using Darknet-19 with anchor box from above step. If you wanna train YOLOv1 on your dataset from the scratch, add "--scratch" in training command like below.  
 
 ```python
-python train.py --exp my_test --data voc.yaml --multiscale
+python train.py --exp my_test --data voc.yaml --multiscale(optional) --scratch(optional)
 ```
 
 
