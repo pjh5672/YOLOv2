@@ -16,7 +16,6 @@
 ## [Description]
 
 This is a repository for PyTorch implementation of YOLOv2 following the original paper (https://arxiv.org/abs/1612.08242).   
-By applying the multi-scale training technique, I found that mAP drops by about 1 points. Instead, It shows that there is reasonable compensation in terms of not having to retrain each time for various input resolutions.
 
 
  - **Performance Table**
@@ -67,7 +66,7 @@ python kmedoids_anchor.py --exp my_test --data voc.yaml
 
 
 #### Model Training 
- - You can train your own YOLOv2 model using Darknet-19 with anchor box from above step. If you wanna train YOLOv1 on your dataset from the scratch, add "--scratch" in training command like below.  
+ - You can train your own YOLOv2 model using Darknet19 with anchor box from above step. If you wanna train YOLOv1 on your dataset from the scratch, add "--scratch" in training command like below.  
 
 ```python
 python train.py --exp my_test --data voc.yaml --multiscale(optional) --scratch(optional)
