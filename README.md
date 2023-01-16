@@ -24,13 +24,14 @@ This is a repository for PyTorch implementation of YOLOv2 following the original
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
 | YOLOv2<br><sup>(<u>Paper:page_with_curl:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | *not reported* | 76.8 | *not reported* | 34.90 |
 | YOLOv2<br><sup>(<u>Our:star:</u>)</br> | PASCAL-VOC | trainval2007+2012 | test2007 | 416 | 35.6 | 73.2 | 50.66 | 29.49 |
-| YOLOv2<br><sup>(<u>Our:star:</u>)</br> | COCO | train2017 | val2017 | 416 | - | - | - | - |
+| YOLOv2<br><sup>(<u>Our:star:</u>)</br> | COCO | train2017 | val2017 | 416 | 20.0 | 45.6 | 50.96 | 29.49 |
 
 
  - **Pretrained Model Weights Download**
 
 	- [Darknet19 backbone](https://drive.google.com/file/d/1qjOfb-KESJFZoJRlwZ_2FbT4-9PkgdjZ/view?usp=share_link)
 	- [YOLOv2 trained on VOC](https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=share_link)
+	- [YOLOv2 trained on COCO](https://drive.google.com/file/d/13opYZb9aXTviEuUC5Wb1POkO-2a2GuIJ/view?usp=share_link)
 
 
 ![result](./asset/result.jpg)
@@ -66,7 +67,7 @@ python kmedoids_anchor.py --exp my_test --data voc.yaml
 
 
 #### Model Training 
- - You can train your own YOLOv2 model using Darknet19 with anchor box from above step. If you wanna train YOLOv1 on your dataset from the scratch, add "--scratch" in training command like below.  
+ - You can train your own YOLOv2 model using Darknet19 with anchor box from above step. If you wanna train YOLOv2 on your dataset from the scratch, add "--scratch" in training command like below.  
 
 ```python
 python train.py --exp my_test --data voc.yaml --multiscale(optional) --scratch(optional)

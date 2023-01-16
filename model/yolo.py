@@ -17,7 +17,8 @@ from utils import set_grid
 
 
 model_urls = {
-    "yolov2": "https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=share_link",
+    "yolov2-voc": "https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=share_link",
+    "yolov2-coco": "https://drive.google.com/file/d/13opYZb9aXTviEuUC5Wb1POkO-2a2GuIJ/view?usp=share_link",
 }
 
 
@@ -39,7 +40,7 @@ class YoloModel(nn.Module):
         if pretrained:
             download_path = ROOT / "weights" / "yolov2.pt"
             if not download_path.is_file():
-                gdown.download(model_urls[f"yolov2"], str(download_path), quiet=False, fuzzy=True)
+                gdown.download(model_urls["yolov2-voc"], str(download_path), quiet=False, fuzzy=True)
             ckpt = torch.load(download_path, map_location="cpu")
             self.load_state_dict(ckpt["model_state"], strict=False)
 
