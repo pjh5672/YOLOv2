@@ -8,7 +8,6 @@ from element import Conv
 class PassthroughLayer(nn.Module):
     def __init__(self, in_channels):
         super().__init__()
-        self.stride = 2
         self.feat_dims = (64, 1024)
         self.conv1 = Conv(in_channels[0], self.feat_dims[0], kernel_size=1, act="leaky_relu")
         self.conv2 = nn.Sequential(
@@ -20,13 +19,8 @@ class PassthroughLayer(nn.Module):
     def forward(self, ftrs):
         C4, C5 = ftrs
         P4 = self.conv1(C4)
+        P4 = torch.cat([P4[..., ::2, ::2], P4[..., 1::2, ::2], P4[..., ::2, 1::2], P4[..., 1::2, 1::2]], dim=1)
         P5 = self.conv2(C5)
-        bs, c, h, w = P4.shape
-        h_div, w_div = h // self.stride, w // self.stride
-        P4 = P4.view(bs, c, h_div, self.stride, w_div, self.stride).transpose(3, 4).contiguous()
-        P4 = P4.view(bs, c, h_div * w_div, self.stride * self.stride).transpose(2, 3).contiguous()
-        P4 = P4.view(bs, c, self.stride * self.stride, h_div, w_div).transpose(1, 2).contiguous()
-        P4 = P4.view(bs, -1, h_div, w_div)
         return torch.cat((P4, P5), dim=1)
 
 
