@@ -29,9 +29,10 @@ This is a repository for PyTorch implementation of YOLOv2 following the original
 
  - **Pretrained Model Weights Download**
 
-	- [Darknet19 backbone](https://drive.google.com/file/d/1qjOfb-KESJFZoJRlwZ_2FbT4-9PkgdjZ/view?usp=share_link)
-	- [YOLOv2 trained on VOC](https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=share_link)
-	- [YOLOv2 trained on COCO](https://drive.google.com/file/d/13opYZb9aXTviEuUC5Wb1POkO-2a2GuIJ/view?usp=share_link)
+	- [Darknet19 backbone](https://drive.google.com/file/d/1zsJe6Av1ZpL7PmPndaMnud0Pjb4CSdt-/view?usp=drive_link)
+	- [Darknet19 backbone(448x448](https://drive.google.com/file/d/1suOCBQjdzuKv92mLqxULgDqkVSE8mQN9/view?usp=drive_link)
+	- [YOLOv2 trained on VOC](https://drive.google.com/file/d/16q3Hkhz8S8_Sn3IUju9U5z9y2hb-3UKP/view?usp=drive_link)
+	- [YOLOv2 trained on COCO](https://drive.google.com/file/d/13opYZb9aXTviEuUC5Wb1POkO-2a2GuIJ/view?usp=drive_link)
 
 
 ![result](./asset/result.jpg)
